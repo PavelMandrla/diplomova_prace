@@ -150,4 +150,22 @@
         - pak jsou pomocí attention map segmentovány davy od pozadí
     - ___yM-SegNet___
         - modifikovaná síť _SegNet_
-        
+
+### [temporal convolutional networks for the Advance prediction of enSo](https://www.nature.com/articles/s41598-020-65070)
+- využití TCN (_temporal convolutional network_) pro předpovězení El-Niňa
+  - oproti RNN (_recurent neural network_) a má TCN mnohem lepší long term memory
+  - oproti LSTM (vylepšená RNN, říkal nám o ní Sojka) prý vykazuje lepší výkon pro velmi dlouhé sekvence inputů
+    - pro mě možná zbytečné, ale i tak je to nice
+  - TCN
+    - dokáže vzít na vstupu jakkoliv dlouhou sekvenci a výstupem je sekvcence stejné dély
+      - stejně jakou u RNN
+    - oproti LSTM používá pouze konvoluce
+      - _casual convolution_
+        - output v čase t je vytvořen pouze z vzorků z času t a méně - žádné informace z budoucnosti
+          - __možná by to LSTM pro mě bylo lepší 🤔__
+
+### [Intro to Temporal Convolutional Networks for Time Series Forecasting in Python](https://towardsdatascience.com/temporal-coils-intro-to-temporal-convolutional-networks-for-time-series-forecasting-in-python-5907c04febc6)
+- tutoriál na TCN (_Temporal Convolutional Net_)
+- _casual convolution_ - výstup je závislý pouze na předcházejících vstupech
+
+### [Implementace TCN + nějaké porovnání](https://github.com/locuslab/TCN)
