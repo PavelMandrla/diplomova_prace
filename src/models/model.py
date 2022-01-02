@@ -94,26 +94,6 @@ convlstm_decoder_params = [
 '''
 
 
-def make_layers(cfg, batch_norm=False):
-    layers = []
-    in_channels = 3
-    for v in cfg:
-        if v == 'M':
-            layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
-        else:
-            conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
-            if batch_norm:
-                layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
-            else:
-                layers += [conv2d, nn.ReLU(inplace=True)]
-            in_channels = v
-    return nn.Sequential(*layers)
-
-cfg = {
-    'E': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512]
-}
-
-
 class MyModel(nn.Module):
     def __init__(self):
         super(MyModel, self).__init__()
@@ -131,8 +111,6 @@ class MyModel(nn.Module):
         self.layer3 = resnet.layer3
         self.layer4 = resnet.layer4
 
-        #self.features = make_layers(cfg['E'], batch_norm=False)
-
         self.reg_layer = nn.Sequential(
             nn.Conv2d(512, 256, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
@@ -146,10 +124,6 @@ class MyModel(nn.Module):
         #   features -> bilinear upsample -> reg_layer -> density layer
         # I want to do
         #   features -> ConvLSTM -> bilinear upsample -> reg_layer -> density layer
-        #print('input: ', x.shape)
-
-        ###x = self.features(x[0])
-        #print('features: ', x.shape)
 
         # x = x.unsqueeze(dim=0)
         # print(x.shape)
@@ -165,7 +139,6 @@ class MyModel(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
 
-        ###x = F.interpolate(x, scale_factor=8, mode='bilinear', align_corners=True)
         x = F.interpolate(x, scale_factor=16, mode='bilinear', align_corners=True)
 
         x = self.reg_layer(x)
