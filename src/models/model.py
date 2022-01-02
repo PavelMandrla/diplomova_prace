@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from torchvision.models import vgg11_bn, vgg19_bn, resnet18
+from torchvision.models import resnet18
 from collections import OrderedDict
 
 from .ConvRNN import CLSTM_cell
