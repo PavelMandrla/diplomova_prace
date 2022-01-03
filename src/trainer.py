@@ -69,6 +69,7 @@ class Trainer(object):
         epoch_mse = AverageMeter()
         epoch_start = time.time()
         #endregion
+        print(self.model)
 
         self.model.train()  # Set model to training mode
 
@@ -80,7 +81,7 @@ class Trainer(object):
             N = inputs.size(0)
 
             with torch.set_grad_enabled(True):
-                outputs, outputs_normed = self.model(inputs)
+                outputs, outputs_normed = self.model(inputs) #'tuple' object has no attribute 'dim'
 
                 # region CALCULATE EPOCH LOSSES
                 ot_loss, ot_obj_value, wd = self.get_OT_loss(outputs, outputs_normed, points)
