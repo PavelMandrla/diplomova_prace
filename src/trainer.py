@@ -11,6 +11,7 @@ from models.model import MyModel
 from torch.utils.data import DataLoader
 from datasets.fdst import FDST
 
+
 class Trainer(object):
 
     def __init__(self, args):
@@ -19,11 +20,11 @@ class Trainer(object):
         self.save_dir = self.get_save_dir()
 
         self.dataloaders = {  # TODO -> move constants to args
-            'train': DataLoader(dataset=FDST("../datasets/our_dataset", training=True, sequence_len=1),
+            'train': DataLoader(dataset=FDST("../datasets/our_dataset", training=True, sequence_len=5),
                                 batch_size=1,
                                 shuffle=True,
                                 num_workers=1),
-            'test': DataLoader(dataset=FDST("../datasets/our_dataset", training=True, sequence_len=1),
+            'test': DataLoader(dataset=FDST("../datasets/our_dataset", training=True, sequence_len=5),
                                batch_size=1,
                                shuffle=True,
                                num_workers=1)
@@ -69,7 +70,6 @@ class Trainer(object):
         epoch_mse = AverageMeter()
         epoch_start = time.time()
         #endregion
-        print(self.model)
 
         self.model.train()  # Set model to training mode
 
@@ -96,7 +96,6 @@ class Trainer(object):
                 epoch_tv_loss.update(tv_loss.item(), N)
 
                 loss = ot_loss + count_loss + tv_loss
-                #print(loss)
                 # endregion
 
                 self.optimizer.zero_grad()
@@ -134,7 +133,6 @@ class Trainer(object):
     def get_TV_loss(self, gd_count, gt_discrete, outputs_normed):
         gd_count_tensor = torch.from_numpy(gd_count).float().to(self.device).unsqueeze(1).unsqueeze(2).unsqueeze(3)
         gt_discrete_normed = gt_discrete / (gd_count_tensor + 1e-6)
-        #print(outputs_normed.shape, gt_discrete_normed.shape, gt_discrete.shape)
         left = self.tv_loss(outputs_normed, gt_discrete_normed).sum(1).sum(1).sum(1)
         right = torch.from_numpy(gd_count).float().to(self.device)
         return (left * right).mean(0) * self.args.wtv
