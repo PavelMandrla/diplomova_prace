@@ -35,6 +35,10 @@ class Trainer(object):
         self.model.to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
+        model_path = './save_dir/17_ckpt.tar'
+        save = torch.load(model_path)
+        self.model.load_state_dict(save['model_state_dict'], self.device)
+
         downsample_ratio = 2 # TODO -> CHANGE??? IS IT OK??
         self.ot_loss = OT_Loss(args.crop_size, downsample_ratio, args.norm_cood, self.device, args.num_of_iter_in_ot, args.reg)
         self.tv_loss = nn.L1Loss(reduction='none').to(self.device)
