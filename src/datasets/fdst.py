@@ -2,7 +2,6 @@
 # https://github.com/sweetyy83/Lstn_fdst_dataset
 
 import os
-import cv2
 import torch
 import random
 import json
@@ -24,9 +23,9 @@ def random_crop(im_h, im_w, crop_h, crop_w):
 
 def gen_discrete_map(im_height, im_width, points):
     """
-        func: generate the discrete map.
-        points: [num_gt, 2], for each row: [width, height]
-        """
+    func: generate the discrete map.
+    points: [num_gt, 2], for each row: [width, height]
+    """
     discrete_map = np.zeros([im_height, im_width], dtype=np.float32)
     h, w = discrete_map.shape[:2]
     num_gt = points.shape[0]
@@ -38,16 +37,9 @@ def gen_discrete_map(im_height, im_width, points):
     p_h = np.minimum(points_np[:, 1], np.array([h - 1] * num_gt).astype(int))
     p_w = np.minimum(points_np[:, 0], np.array([w - 1] * num_gt).astype(int))
     p_index = torch.from_numpy(p_h * im_width + p_w)
-    discrete_map = torch.zeros(im_width * im_height).scatter_add_(0, index=p_index,
-                                                                  src=torch.ones(im_width * im_height)).view(im_height,
-                                                                                                             im_width).numpy()
+    discrete_map = torch.zeros(im_width * im_height)\
+        .scatter_add_(0, index=p_index, src=torch.ones(im_width * im_height)).view(im_height, im_width).numpy()
 
-    ''' slow method
-    for p in points:
-        p = np.round(p).astype(int)
-        p[0], p[1] = min(h - 1, p[1]), min(w - 1, p[0])
-        discrete_map[p[0], p[1]] += 1
-    '''
     assert np.sum(discrete_map) == num_gt
     return discrete_map
 
@@ -87,19 +79,14 @@ class FDST(Dataset):
         return len(self.item_id_dict.keys())
 
     def __getitem__(self, idx):
+        print(self.item_id_dict[idx])
         images = [Image.open(img_path).convert('RGB') for img_path in self.item_id_dict[idx]]
         keypoints = self.load_keypoints(self.item_id_dict[idx][-1])
 
-        '''
-        tensors = []
-        for img_path in self.item_id_dict[idx]:
-            img = cv2.imread(img_path)
-            img_tensor = torch.from_numpy(img)
-            img_tensor = img_tensor.permute(2, 0, 1)
-            tensors.append(img_tensor)
-        return torch.stack(tensors)
-        '''
-        return self.train_transform(images, keypoints)
+        if self.training:
+            return self.train_transform(images, keypoints)
+        else:
+            return self.norm_transform(images, keypoints)
 
     def train_transform(self, imgs, keypoints):
         wd, ht = imgs[0].size
@@ -110,8 +97,7 @@ class FDST(Dataset):
         imgs = [F.crop(img, i, j, h, w) for img in imgs]
         if len(keypoints) > 0:
             keypoints = keypoints - [j, i]
-            idx_mask = (keypoints[:, 0] >= 0) * (keypoints[:, 0] <= w) * \
-                       (keypoints[:, 1] >= 0) * (keypoints[:, 1] <= h)
+            idx_mask = (keypoints[:, 0] >= 0) * (keypoints[:, 0] <= w) * (keypoints[:, 1] >= 0) * (keypoints[:, 1] <= h)
             keypoints = keypoints[idx_mask]
         else:
             keypoints = np.empty([0, 2])
@@ -132,6 +118,30 @@ class FDST(Dataset):
                 imgs = [F.hflip(img) for img in imgs]
                 gt_discrete = np.fliplr(gt_discrete)
         gt_discrete = np.expand_dims(gt_discrete, 0)
+
+        imgs_transformed = [self.trans(img) for img in imgs]
+        imgs_tensor = torch.stack(imgs_transformed)
+
+        return imgs_tensor, torch.from_numpy(keypoints.copy()).float(), torch.from_numpy(gt_discrete.copy()).float()
+
+    def norm_transform(self, imgs, keypoints):
+        wd, ht = imgs[0].size
+
+        i, j, h, w = 0, 400, self.c_size, self.c_size
+        imgs = [F.crop(img, i, j, h, w) for img in imgs]
+        if len(keypoints) > 0:
+            keypoints = keypoints - [j, i]
+            idx_mask = (keypoints[:, 0] >= 0) * (keypoints[:, 0] <= w) * (keypoints[:, 1] >= 0) * (keypoints[:, 1] <= h)
+            keypoints = keypoints[idx_mask]
+        else:
+            keypoints = np.empty([0, 2])
+
+        gt_discrete = gen_discrete_map(h, w, keypoints)
+        down_w = w // self.d_ratio
+        down_h = h // self.d_ratio
+
+        gt_discrete = gt_discrete.reshape([down_h, self.d_ratio, down_w, self.d_ratio]).sum(axis=(1, 3))
+        assert np.sum(gt_discrete) == len(keypoints)
 
         imgs_transformed = [self.trans(img) for img in imgs]
         imgs_tensor = torch.stack(imgs_transformed)
@@ -159,4 +169,11 @@ class FDST(Dataset):
             points.append((x + w/2.0, y + h/2.0))
         return np.array(points)
 
-
+    def get_unnormed_item(self, idx):
+        images = [Image.open(img_path).convert('RGB') for img_path in self.item_id_dict[idx]]
+        if self.training:
+            return None
+        else:
+            i, j, h, w = 0, 400, self.c_size, self.c_size
+            imgs = [F.crop(img, i, j, h, w) for img in images]
+            return imgs[-1]

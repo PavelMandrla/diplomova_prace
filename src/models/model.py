@@ -8,7 +8,7 @@ from .ConvRNN import CLSTM_cell
 
 
 class MyModel(nn.Module):
-    def __init__(self):
+    def __init__(self, model_path=None):
         super(MyModel, self).__init__()
         self.channels = 3
 
@@ -28,9 +28,8 @@ class MyModel(nn.Module):
 
         # region INIT CONVLSTM
 
-        #self.encoder = Encoder(encoder_params[0], encoder_params[1]).cuda()
         self.encoder = Encoder([
-                OrderedDict({'conv1_leaky_1': [512, 64, 3, 1, 1]}), # Conv2d(512, 64, kernel_size=(3,3), stride=(1,1), padding=(1,1))
+                OrderedDict({'conv1_leaky_1': [512, 64, 3, 1, 1]}),
                 OrderedDict({'conv2_leaky_1': [64, 64, 3, 1, 1]}),
             ],
             [
@@ -48,6 +47,10 @@ class MyModel(nn.Module):
         )
         self.density_layer = nn.Sequential(nn.Conv2d(128, 1, 1), nn.ReLU())
 
+        if model_path is not None:
+            saved_model = torch.load(model_path)
+            self.load_state_dict(saved_model['model_state_dict'])
+
     def features(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
@@ -62,13 +65,16 @@ class MyModel(nn.Module):
         return x
 
     def forward(self, x):
+        print('input', x.shape)
         x = self.features(x[0])
         x = x.unsqueeze(dim=0)
+        print('features', x.shape)
 
         x, _ = self.encoder(x)[-1]  # ENCODER RETURNS ((hy, cy)), WE NEED hy
-        #print(x.shape)
+        print('ConvLSTM', x.shape)
 
         x = F.interpolate(x, scale_factor=16, mode='bilinear', align_corners=True)
+        print('Upscale', x.shape)
 
         x = self.reg_layer(x)
 
