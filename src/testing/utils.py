@@ -1,4 +1,8 @@
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, PillowWriter
+import torch
+import cv2
+import numpy as np
 
 
 def show_image(input_tensor, head_pos=None):
@@ -12,3 +16,32 @@ def show_image(input_tensor, head_pos=None):
             for point in head_pos:
                 ax.plot(point[0], point[1], "or")
     plt.show()
+
+
+def animate_range(model, dataset, device):
+    fig, axs = plt.subplots(1, 2)
+
+    def animate(i):
+        print(i)
+        data = dataset[i]
+        image = data[0].unsqueeze(dim=0)
+
+        image = image.to(device)
+        with torch.set_grad_enabled(False):
+            mu, mu_normed = model(image)
+        image.cpu()
+
+        vis_img = mu[0, 0].cpu().numpy()
+        vis_img = (vis_img - vis_img.min()) / (vis_img.max() - vis_img.min() + 1e-5)
+        vis_img = (vis_img * 255).astype(np.uint8)
+        vis_img = cv2.applyColorMap(vis_img, cv2.COLORMAP_JET)
+        vis_img = cv2.cvtColor(vis_img, cv2.COLOR_BGR2RGB)
+
+        axs[0].set_title('%.2f' % (torch.sum(mu).item()), fontsize = 14)
+        im1 = axs[0].imshow(vis_img)
+        axs[1].set_title('{}'.format(data[1].shape[0]), fontsize=14)
+        im2 = axs[1].imshow(dataset.get_unnormed_item(i))
+        return im1, im2
+
+    ani = FuncAnimation(fig, animate, interval=40, blit=True, repeat=True, frames=100)
+    ani.save("TLI.gif", dpi=300, writer=PillowWriter(fps=25))

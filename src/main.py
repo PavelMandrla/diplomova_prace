@@ -4,7 +4,7 @@ import numpy as np
 from models.model import MyModel
 from datasets.fdst import FDST
 from torch.utils.data import DataLoader
-from testing.utils import show_image
+from testing.utils import show_image, animate_range
 import matplotlib.pyplot as plt
 
 
@@ -17,6 +17,9 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = MyModel(model_path)
 model = model.eval().to(device)
 
+animate_range(model, dataset, device)
+
+'''
 for i in range(149 - 5):
     data = dataset[i]
     #dataset.get_unnormed_item(i).show()
@@ -50,7 +53,7 @@ for i in range(149 - 5):
 
     plt.show()
 
-
+'''
 
 
 
