@@ -4,7 +4,7 @@ import numpy as np
 from models.model import MyModel
 from datasets.fdst import FDST
 from torch.utils.data import DataLoader
-from testing.utils import show_image, animate_range
+from testing.utils import show_image, animate_range, range_real_time
 import matplotlib.pyplot as plt
 
 
@@ -17,7 +17,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = MyModel(model_path)
 model = model.eval().to(device)
 
-animate_range(model, dataset, device)
+range_real_time(model, dataset, device, 220, 700)
+#animate_range(model, dataset, device)
 
 '''
 for i in range(149 - 5):

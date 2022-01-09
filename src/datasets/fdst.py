@@ -79,7 +79,7 @@ class FDST(Dataset):
         return len(self.item_id_dict.keys())
 
     def __getitem__(self, idx):
-        print(self.item_id_dict[idx])
+        #print(self.item_id_dict[idx])
         images = [Image.open(img_path).convert('RGB') for img_path in self.item_id_dict[idx]]
         keypoints = self.load_keypoints(self.item_id_dict[idx][-1])
 

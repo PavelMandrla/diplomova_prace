@@ -65,16 +65,12 @@ class MyModel(nn.Module):
         return x
 
     def forward(self, x):
-        print('input', x.shape)
         x = self.features(x[0])
         x = x.unsqueeze(dim=0)
-        print('features', x.shape)
 
         x, _ = self.encoder(x)[-1]  # ENCODER RETURNS ((hy, cy)), WE NEED hy
-        print('ConvLSTM', x.shape)
 
         x = F.interpolate(x, scale_factor=16, mode='bilinear', align_corners=True)
-        print('Upscale', x.shape)
 
         x = self.reg_layer(x)
 
