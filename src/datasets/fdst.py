@@ -46,7 +46,7 @@ def gen_discrete_map(im_height, im_width, points):
 
 class FDST(Dataset):
 
-    def __init__(self, root_path, training=True, sequence_len=5, crop_size=512, downsample_ratio=2):
+    def __init__(self, root_path, training=True, sequence_len=5, crop_size=512, downsample_ratio=2, stride=1):
         """
         Constructor of FDST dataset loader
         :param root_path: path to the root directory of the dataset
@@ -58,28 +58,43 @@ class FDST(Dataset):
         self.sequence_len = sequence_len
         self.c_size = crop_size
         self.d_ratio = downsample_ratio
+        self.stride = stride
         self.trans = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
-        self.item_id_dict = {}
 
-        # get files from subdirecories and assign indicies to them
+        self.item_id_dict = {}
+        self.index_inputs()
+
+    def index_inputs(self):
         top_i = 0
-        subdirs = [os.path.join(self.data_path, name) for name in os.listdir(self.data_path) if os.path.isdir(os.path.join(self.data_path, name))]
-        for subdir in subdirs:
-            items = glob(os.path.join(subdir, '*.jpg'))
-            items.sort()
-            for i, item in enumerate(items):
-                if i >= self.sequence_len:
-                    self.item_id_dict[top_i] = items[i-self.sequence_len:i]
-                    top_i += 1
+        overall_length = self.sequence_len * self.stride
+
+        dir_items = os.listdir(self.data_path)      # GET ALL ITEMS IN DIRECTORY
+        for name in dir_items:
+            item_path = os.path.join(self.data_path, name)
+            if os.path.isdir(item_path):                        # IF THE ITEM IS A DIRECTORY
+                items = glob(os.path.join(item_path, '*.jpg'))
+                items.sort()
+
+                for i, item in enumerate(items):
+                    if i >= overall_length:
+                        seq_start, seq_end = self.get_seq_bounds(i)
+                        self.item_id_dict[top_i] = items[seq_start:seq_end:self.stride]
+                        top_i += 1
+
+    def get_seq_bounds(self, i):
+        overall_length = self.sequence_len * self.stride
+        seq_start = i - overall_length + self.stride
+        seq_end = i + 1
+        return seq_start, seq_end
 
     def __len__(self):
         return len(self.item_id_dict.keys())
 
     def __getitem__(self, idx):
-        #print(self.item_id_dict[idx])
+        print(self.item_id_dict[idx])
         images = [Image.open(img_path).convert('RGB') for img_path in self.item_id_dict[idx]]
         keypoints = self.load_keypoints(self.item_id_dict[idx][-1])
 
