@@ -1,10 +1,8 @@
 import os.path
 import time
-
 import numpy as np
 import torch
 from torch import optim, nn
-
 from losses.ot_loss import OT_Loss
 from utils import AverageMeter
 from models.model import MyModel
@@ -59,8 +57,6 @@ class Trainer(object):
     def train(self):
         for epoch in range(self.args.max_epoch + 1):       # TODO -> maybe add checkpoint mechanism, like in DM-Count
             self.train_epoch(epoch)
-            #if epoch % self.args.val_epoch == 0 and epoch >= self.args.val_start:
-            #    self.val_epoch()
 
     def train_epoch(self, epoch):
         #region Setup for measuring
@@ -123,7 +119,6 @@ class Trainer(object):
             'optimizer_state_dict': self.optimizer.state_dict(),
             'model_state_dict': model_state_dic
         }, save_path)
-        #self.save_list.append(save_path) # TODO -> IS THIS NEEDED???s
 
     def get_OT_loss(self, outputs, outputs_normed, points):
         ot_loss, wd, ot_obj_value = self.ot_loss(outputs_normed, outputs, points)

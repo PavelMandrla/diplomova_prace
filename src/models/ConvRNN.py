@@ -93,7 +93,7 @@ class CLSTM_cell(nn.Module):
             hx = torch.zeros(inputs.size(1), self.num_features, self.shape[0], self.shape[1]).cuda()
             cx = torch.zeros(inputs.size(1), self.num_features, self.shape[0], self.shape[1]).cuda()
         else:
-            hx, cx = hidden_state # TODO -> tady to očekává dvě věci na unpacknutí, ale má místo toho tensor 5, 15, 7, 7
+            hx, cx = hidden_state
         output_inner = []
         for index in range(seq_len):
             if inputs is None:

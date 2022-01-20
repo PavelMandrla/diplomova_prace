@@ -3,7 +3,6 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 import torch
 import cv2
 import numpy as np
-import timeit
 from timeit import default_timer as timer
 
 
@@ -78,4 +77,19 @@ def range_real_time(model, dataset, device, range_from, range_to):
         cv2.waitKey(5)
 
 
+def eval_video(model_path, vid_path):
+    cap = cv2.VideoCapture(vid_path)
 
+    if not cap.isOpened():
+        raise "could not open video file %s" % vid_path
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if ret:
+            cv2.imshow('video', frame)
+            key = cv2.waitKey(20)
+
+            if key == ord('q'):
+                break
+        else:
+            break
