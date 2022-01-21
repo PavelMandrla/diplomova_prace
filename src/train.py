@@ -6,6 +6,7 @@ from trainer import Trainer
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train')
+    parser.add_argument('--device',                         default='0',    help='assign device')
     parser.add_argument('--lr',                 type=float, default=1e-5,   help='initial learning rate')
     parser.add_argument('--weight-decay',       type=float, default=1e-4,   help='weight decay')
     parser.add_argument('--max-epoch',          type=int,   default=1000,   help='max training epoch')

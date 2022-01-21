@@ -13,14 +13,6 @@ import torchvision.transforms.functional as F
 import numpy as np
 
 
-def random_crop(im_h, im_w, crop_h, crop_w):
-    res_h = im_h - crop_h
-    res_w = im_w - crop_w
-    i = random.randint(0, res_h)
-    j = random.randint(0, res_w)
-    return i, j, crop_h, crop_w
-
-
 def gen_discrete_map(im_height, im_width, points):
     """
     func: generate the discrete map.
@@ -46,7 +38,7 @@ def gen_discrete_map(im_height, im_width, points):
 
 class FDST(Dataset):
 
-    def __init__(self, root_path, training=True, sequence_len=5, crop_size=512, downsample_ratio=2, stride=1):
+    def __init__(self, root_path, training=True, sequence_len=5, crop_size=512, crop_origin_x=600, crop_origin_y=0, downsample_ratio=2, stride=1):
         """
         Constructor of FDST dataset loader
         :param root_path: path to the root directory of the dataset
@@ -57,6 +49,8 @@ class FDST(Dataset):
         self.training = training
         self.sequence_len = sequence_len
         self.c_size = crop_size
+        self.crop_origin_x = crop_origin_x
+        self.crop_origin_y = crop_origin_y
         self.d_ratio = downsample_ratio
         self.stride = stride
         self.trans = transforms.Compose([
@@ -94,62 +88,93 @@ class FDST(Dataset):
         return len(self.item_id_dict.keys())
 
     def __getitem__(self, idx):
-        print(self.item_id_dict[idx])
         images = [Image.open(img_path).convert('RGB') for img_path in self.item_id_dict[idx]]
         keypoints = self.load_keypoints(self.item_id_dict[idx][-1])
 
-        if self.training:
-            return self.train_transform(images, keypoints)
-        else:
-            return self.norm_transform(images, keypoints)
-
-    def train_transform(self, imgs, keypoints):
-        wd, ht = imgs[0].size
-        st_size = 1.0 * min(wd, ht)
-        assert st_size >= self.c_size
-        assert len(keypoints) >= 0
-        i, j, h, w = random_crop(ht, wd, self.c_size, self.c_size)
-        imgs = [F.crop(img, i, j, h, w) for img in imgs]
-        if len(keypoints) > 0:
-            keypoints = keypoints - [j, i]
-            idx_mask = (keypoints[:, 0] >= 0) * (keypoints[:, 0] <= w) * (keypoints[:, 1] >= 0) * (keypoints[:, 1] <= h)
-            keypoints = keypoints[idx_mask]
-        else:
-            keypoints = np.empty([0, 2])
+        h, w, imgs, keypoints = self.crop(images, keypoints)
 
         gt_discrete = gen_discrete_map(h, w, keypoints)
         down_w = w // self.d_ratio
         down_h = h // self.d_ratio
+
         gt_discrete = gt_discrete.reshape([down_h, self.d_ratio, down_w, self.d_ratio]).sum(axis=(1, 3))
         assert np.sum(gt_discrete) == len(keypoints)
 
-        if len(keypoints) > 0:
-            if random.random() > 0.5:
-                imgs = [F.hflip(img) for img in imgs]
-                gt_discrete = np.fliplr(gt_discrete)
-                keypoints[:, 0] = w - keypoints[:, 0]
+        if self.training:
+            imgs, keypoints, gt_discrete = self.augment(imgs, keypoints, gt_discrete)
+
+        imgs_transformed = [self.trans(img) for img in imgs]
+        imgs_tensor = torch.stack(imgs_transformed)
+        return imgs_tensor, torch.from_numpy(keypoints.copy()).float(), torch.from_numpy(gt_discrete.copy()).float()
+
+    def crop(self, imgs, keypoints):
+        img_w, img_h = imgs[0].size
+        st_size = 1.0 * min(img_w, img_h)
+        assert st_size >= self.c_size
+
+        if self.training:
+            crop_size = int(np.random.uniform(self.c_size/4, min(img_w, img_h)))  # RANDOMLY RESIZE THE IMAGE
+            res_h = img_h - crop_size
+            res_w = img_w - crop_size
+            i = random.randint(0, res_h)
+            j = random.randint(0, res_w)
+            h, w = crop_size, crop_size     # TODO -> REFACTOR THIS MESS
         else:
-            if random.random() > 0.5:
-                imgs = [F.hflip(img) for img in imgs]
-                gt_discrete = np.fliplr(gt_discrete)
+            crop_size = self.c_size
+            i, j, h, w = self.crop_origin_y, self.crop_origin_x, crop_size, crop_size
+
+        imgs = [F.crop(img, i, j, h, w) for img in imgs]
+        if self.training:
+            imgs = [F.resize(img, size=self.c_size) for img in imgs]
+
+        if len(keypoints) > 0:
+            keypoints = keypoints - [j, i]
+            idx_mask = (keypoints[:, 0] >= 0) * (keypoints[:, 0] <= w) * (keypoints[:, 1] >= 0) * (keypoints[:, 1] <= h)
+            keypoints = keypoints[idx_mask]
+            ratio = self.c_size / crop_size
+            keypoints = np.array([[k_x * ratio, k_y * ratio] for k_x, k_y in keypoints])
+        else:
+            keypoints = np.empty([0, 2])
+
+        h, w = imgs[0].size
+        return h, w, imgs, keypoints
+
+    def augment(self, imgs, keypoints, gt_discrete):
+        h, w = imgs[0].size
+
+        # RANDOM FLIP
+        if random.random() > 0.5:
+            imgs = [F.hflip(img) for img in imgs]
+            gt_discrete = np.fliplr(gt_discrete)
+            if len(keypoints) > 0:
+                keypoints[:, 0] = w - keypoints[:, 0]
+        gt_discrete = np.expand_dims(gt_discrete, 0)
+
+        return imgs, keypoints, gt_discrete
+
+    def train_transform(self, imgs, keypoints):
+        h, w, imgs, keypoints = self.crop(imgs, keypoints)
+
+        gt_discrete = gen_discrete_map(h, w, keypoints)
+        down_w = w // self.d_ratio
+        down_h = h // self.d_ratio
+
+        gt_discrete = gt_discrete.reshape([down_h, self.d_ratio, down_w, self.d_ratio]).sum(axis=(1, 3))
+        assert np.sum(gt_discrete) == len(keypoints)
+
+        if random.random() > 0.5:
+            imgs = [F.hflip(img) for img in imgs]
+            gt_discrete = np.fliplr(gt_discrete)
+            if len(keypoints) > 0:
+                keypoints[:, 0] = w - keypoints[:, 0]
         gt_discrete = np.expand_dims(gt_discrete, 0)
 
         imgs_transformed = [self.trans(img) for img in imgs]
         imgs_tensor = torch.stack(imgs_transformed)
-
         return imgs_tensor, torch.from_numpy(keypoints.copy()).float(), torch.from_numpy(gt_discrete.copy()).float()
 
     def norm_transform(self, imgs, keypoints):
-        wd, ht = imgs[0].size
-
-        i, j, h, w = 0, 400, self.c_size, self.c_size
-        imgs = [F.crop(img, i, j, h, w) for img in imgs]
-        if len(keypoints) > 0:
-            keypoints = keypoints - [j, i]
-            idx_mask = (keypoints[:, 0] >= 0) * (keypoints[:, 0] <= w) * (keypoints[:, 1] >= 0) * (keypoints[:, 1] <= h)
-            keypoints = keypoints[idx_mask]
-        else:
-            keypoints = np.empty([0, 2])
+        h, w, imgs, keypoints = self.crop(imgs, keypoints)
 
         gt_discrete = gen_discrete_map(h, w, keypoints)
         down_w = w // self.d_ratio
@@ -160,7 +185,6 @@ class FDST(Dataset):
 
         imgs_transformed = [self.trans(img) for img in imgs]
         imgs_tensor = torch.stack(imgs_transformed)
-
         return imgs_tensor, torch.from_numpy(keypoints.copy()).float(), torch.from_numpy(gt_discrete.copy()).float()
 
     def load_keypoints(self, img_path):
@@ -189,6 +213,6 @@ class FDST(Dataset):
         if self.training:
             return None
         else:
-            i, j, h, w = 0, 400, self.c_size, self.c_size
+            i, j, h, w = self.crop_origin_y, self.crop_origin_x, self.c_size, self.c_size
             imgs = [F.crop(img, i, j, h, w) for img in images]
             return imgs[-1]
