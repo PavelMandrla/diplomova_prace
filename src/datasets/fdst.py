@@ -38,7 +38,7 @@ def gen_discrete_map(im_height, im_width, points):
 
 class FDST(Dataset):
 
-    def __init__(self, root_path, training=True, sequence_len=5, crop_size=512, crop_origin_x=600, crop_origin_y=0, downsample_ratio=2, stride=1):
+    def __init__(self, root_path, training=True, sequence_len=5, crop_size=(720, 480), crop_origin_x=600, crop_origin_y=0, downsample_ratio=2, stride=1):
         """
         Constructor of FDST dataset loader
         :param root_path: path to the root directory of the dataset
@@ -48,7 +48,7 @@ class FDST(Dataset):
         self.data_path = os.path.join(root_path, "train_data" if training else "test_data")
         self.training = training
         self.sequence_len = sequence_len
-        self.c_size = crop_size
+        self.crop_size = crop_size
         self.crop_origin_x = crop_origin_x
         self.crop_origin_y = crop_origin_y
         self.d_ratio = downsample_ratio
@@ -91,13 +91,13 @@ class FDST(Dataset):
         images = [Image.open(img_path).convert('RGB') for img_path in self.item_id_dict[idx]]
         keypoints = self.load_keypoints(self.item_id_dict[idx][-1])
 
-        h, w, imgs, keypoints = self.crop(images, keypoints)
+        w, h, imgs, keypoints = self.crop(images, keypoints)
 
-        gt_discrete = gen_discrete_map(h, w, keypoints)
+        gt_discrete = gen_discrete_map(w, h, keypoints)
         down_w = w // self.d_ratio
         down_h = h // self.d_ratio
 
-        gt_discrete = gt_discrete.reshape([down_h, self.d_ratio, down_w, self.d_ratio]).sum(axis=(1, 3))
+        gt_discrete = gt_discrete.reshape([down_w, self.d_ratio, down_h, self.d_ratio]).sum(axis=(1, 3))
         assert np.sum(gt_discrete) == len(keypoints)
 
         if self.training:
@@ -107,40 +107,56 @@ class FDST(Dataset):
         imgs_tensor = torch.stack(imgs_transformed)
         return imgs_tensor, torch.from_numpy(keypoints.copy()).float(), torch.from_numpy(gt_discrete.copy()).float()
 
+    def get_rand_crop_size(self, img_w, img_h):
+        img_ratio = img_w / img_h
+        crop_ratio = self.crop_size[0] / self.crop_size[1]
+
+        if img_ratio > crop_ratio:      # IMAGE IS WIDER THAN CROP -> FOCUS ON HEIGHT
+            scaled_crop_h = int(np.random.uniform(self.crop_size[1] / 4, img_h))
+            scaled_crop_w = scaled_crop_h * crop_ratio
+            while not int(scaled_crop_w) == scaled_crop_w:  # HACK TO KEEP THE HEIGHT AND WIDTH BOTH IN NATURAL NUMBERS
+                scaled_crop_h -= 1
+                scaled_crop_w = scaled_crop_h * crop_ratio
+        else:                           # IMAGE IS TALLER THAN CROP -> FOCUS ON WIDTH
+            scaled_crop_w = int(np.random.uniform(self.crop_size[0] / 4, img_w))
+            scaled_crop_h = scaled_crop_w / crop_ratio
+            while not int(scaled_crop_h) == scaled_crop_h:  # HACK TO KEEP THE HEIGHT AND WIDTH BOTH IN NATURAL NUMBERS
+                scaled_crop_w -= 1
+                scaled_crop_h = scaled_crop_h / crop_ratio
+
+        return int(scaled_crop_w), int(scaled_crop_h)
+
     def crop(self, imgs, keypoints):
         img_w, img_h = imgs[0].size
-        st_size = 1.0 * min(img_w, img_h)
-        assert st_size >= self.c_size
 
         if self.training:
-            crop_size = int(np.random.uniform(self.c_size/4, min(img_w, img_h)))  # RANDOMLY RESIZE THE IMAGE
-            res_h = img_h - crop_size
-            res_w = img_w - crop_size
-            i = random.randint(0, res_h)
-            j = random.randint(0, res_w)
-            h, w = crop_size, crop_size     # TODO -> REFACTOR THIS MESS
+            # RANDOMLY RESIZE THE IMAGE
+            scaled_crop_size = self.get_rand_crop_size(img_w, img_h)
+            crop_origin_x = random.randint(0, img_w - scaled_crop_size[0])
+            crop_origin_y = random.randint(0, img_h - scaled_crop_size[1])
+            w, h = scaled_crop_size   # TODO -> REMOVE h, w?
         else:
-            crop_size = self.c_size
-            i, j, h, w = self.crop_origin_y, self.crop_origin_x, crop_size, crop_size
+            scaled_crop_size = self.crop_size
+            crop_origin_x, crop_origin_y = self.crop_origin_x, self.crop_origin_y           #ratio = self.crop_size[0] / scaled_crop_size[0]
+            w, h = scaled_crop_size                                                         #keypoints /= ratio
 
-        imgs = [F.crop(img, i, j, h, w) for img in imgs]
+        imgs = [F.crop(img, crop_origin_y, crop_origin_x, h, w) for img in imgs]
         if self.training:
-            imgs = [F.resize(img, size=self.c_size) for img in imgs]
+            imgs = [F.resize(img, size=list(self.crop_size)[::-1]) for img in imgs]
 
         if len(keypoints) > 0:
-            keypoints = keypoints - [j, i]
+            keypoints = keypoints - [crop_origin_x, crop_origin_y]
             idx_mask = (keypoints[:, 0] >= 0) * (keypoints[:, 0] <= w) * (keypoints[:, 1] >= 0) * (keypoints[:, 1] <= h)
             keypoints = keypoints[idx_mask]
-            ratio = self.c_size / crop_size
-            keypoints = np.array([[k_x * ratio, k_y * ratio] for k_x, k_y in keypoints])
+            keypoints *= self.crop_size[0] / scaled_crop_size[0]    # ALIGN KEYPOINTS WITH SCALED IMAGE
         else:
             keypoints = np.empty([0, 2])
 
-        h, w = imgs[0].size
+        w, h = imgs[0].size
         return h, w, imgs, keypoints
 
     def augment(self, imgs, keypoints, gt_discrete):
-        h, w = imgs[0].size
+        w, h = imgs[0].size
 
         # RANDOM FLIP
         if random.random() > 0.5:
@@ -178,6 +194,6 @@ class FDST(Dataset):
         if self.training:
             return None
         else:
-            i, j, h, w = self.crop_origin_y, self.crop_origin_x, self.c_size, self.c_size
+            i, j, h, w = self.crop_origin_y, self.crop_origin_x, self.crop_size, self.crop_size
             imgs = [F.crop(img, i, j, h, w) for img in images]
             return imgs[-1]

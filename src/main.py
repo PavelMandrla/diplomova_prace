@@ -35,11 +35,13 @@ from testing.utils import show_image
 dataset_path = '../datasets/our_dataset'
 model_path = './save_dir/40_ckpt.tar'
 
-dataset = FDST(dataset_path, training=False, sequence_len=5)
-dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=1)
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+dataset = FDST(dataset_path, training=False, sequence_len=5, stride=5, crop_size=(500, 500))
+dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=0)
+#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-a, b, c = next(iter(dataloader))
+iterator = iter(dataloader)
+a, b, c = next(iterator)
+
 show_image(a, b[0])
 
 
