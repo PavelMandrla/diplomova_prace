@@ -152,41 +152,6 @@ class FDST(Dataset):
 
         return imgs, keypoints, gt_discrete
 
-    def train_transform(self, imgs, keypoints):
-        h, w, imgs, keypoints = self.crop(imgs, keypoints)
-
-        gt_discrete = gen_discrete_map(h, w, keypoints)
-        down_w = w // self.d_ratio
-        down_h = h // self.d_ratio
-
-        gt_discrete = gt_discrete.reshape([down_h, self.d_ratio, down_w, self.d_ratio]).sum(axis=(1, 3))
-        assert np.sum(gt_discrete) == len(keypoints)
-
-        if random.random() > 0.5:
-            imgs = [F.hflip(img) for img in imgs]
-            gt_discrete = np.fliplr(gt_discrete)
-            if len(keypoints) > 0:
-                keypoints[:, 0] = w - keypoints[:, 0]
-        gt_discrete = np.expand_dims(gt_discrete, 0)
-
-        imgs_transformed = [self.trans(img) for img in imgs]
-        imgs_tensor = torch.stack(imgs_transformed)
-        return imgs_tensor, torch.from_numpy(keypoints.copy()).float(), torch.from_numpy(gt_discrete.copy()).float()
-
-    def norm_transform(self, imgs, keypoints):
-        h, w, imgs, keypoints = self.crop(imgs, keypoints)
-
-        gt_discrete = gen_discrete_map(h, w, keypoints)
-        down_w = w // self.d_ratio
-        down_h = h // self.d_ratio
-
-        gt_discrete = gt_discrete.reshape([down_h, self.d_ratio, down_w, self.d_ratio]).sum(axis=(1, 3))
-        assert np.sum(gt_discrete) == len(keypoints)
-
-        imgs_transformed = [self.trans(img) for img in imgs]
-        imgs_tensor = torch.stack(imgs_transformed)
-        return imgs_tensor, torch.from_numpy(keypoints.copy()).float(), torch.from_numpy(gt_discrete.copy()).float()
-
     def load_keypoints(self, img_path):
         """
         load ground truth from the JSON file and put them into an appropriate format
