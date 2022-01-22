@@ -194,6 +194,5 @@ class FDST(Dataset):
         if self.training:
             return None
         else:
-            i, j, h, w = self.crop_origin_y, self.crop_origin_x, self.crop_size, self.crop_size
-            imgs = [F.crop(img, i, j, h, w) for img in images]
+            imgs = [F.crop(img, self.crop_origin_y, self.crop_origin_x, self.crop_size[1], self.crop_size[0]) for img in images]
             return imgs[-1]

@@ -8,7 +8,7 @@ from .ConvRNN import CLSTM_cell
 
 
 class MyModel(nn.Module):
-    def __init__(self, model_path=None):
+    def __init__(self, model_path=None, input_size=(720, 480)):
         super(MyModel, self).__init__()
         self.channels = 3
 
@@ -27,14 +27,14 @@ class MyModel(nn.Module):
         # endregion
 
         # region INIT CONVLSTM
-
+        features_size = self.get_size_after_features(input_size)
         self.encoder = Encoder([
                 OrderedDict({'conv1_leaky_1': [512, 64, 3, 1, 1]}),
                 OrderedDict({'conv2_leaky_1': [64, 64, 3, 1, 1]}),
             ],
             [
-                CLSTM_cell(shape=(16, 16), input_channels=64, filter_size=5, num_features=64),
-                CLSTM_cell(shape=(16, 16), input_channels=64, filter_size=5, num_features=512),
+                CLSTM_cell(shape=(features_size[1], features_size[0]), input_channels=64, filter_size=5, num_features=64),
+                CLSTM_cell(shape=(features_size[1], features_size[0]), input_channels=64, filter_size=5, num_features=512),
             ])
 
         # endregion
@@ -67,6 +67,7 @@ class MyModel(nn.Module):
     def forward(self, x):
         x = self.features(x[0])
         x = x.unsqueeze(dim=0)
+        print('forward', x.shape)
 
         x, _ = self.encoder(x)[-1]  # ENCODER RETURNS ((hy, cy)), WE NEED hy
 
@@ -80,3 +81,8 @@ class MyModel(nn.Module):
         mu_sum = mu.view([B, -1]).sum(1).unsqueeze(1).unsqueeze(2).unsqueeze(3)
         mu_normed = mu / (mu_sum + 1e-6)
         return mu, mu_normed
+
+    def get_size_after_features(self, input_size):
+        input = torch.zeros(1,3,input_size[1], input_size[0])
+        output = self.features(input)
+        return output.shape[:-3:-1]  # return last two in reverse order (width, height)
