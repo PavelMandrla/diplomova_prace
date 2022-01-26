@@ -38,7 +38,7 @@ def gen_discrete_map(im_height, im_width, points):
 
 class FDST(Dataset):
 
-    def __init__(self, root_path, training=True, sequence_len=5, crop_size=(720, 480), crop_origin_x=600, crop_origin_y=0, downsample_ratio=2, stride=1):
+    def __init__(self, root_path, training=True, sequence_len=5, crop_size=(512, 512), crop_origin_x=0, crop_origin_y=0, downsample_ratio=2, stride=1):
         """
         Constructor of FDST dataset loader
         :param root_path: path to the root directory of the dataset

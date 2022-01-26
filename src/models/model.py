@@ -8,7 +8,7 @@ from .ConvRNN import CLSTM_cell
 
 
 class MyModel(nn.Module):
-    def __init__(self, model_path=None, input_size=(720, 480)):
+    def __init__(self, model_path=None, input_size=(512, 512)):
         super(MyModel, self).__init__()
         self.channels = 3
 
@@ -36,7 +36,6 @@ class MyModel(nn.Module):
                 CLSTM_cell(shape=(features_size[1], features_size[0]), input_channels=64, filter_size=5, num_features=64),
                 CLSTM_cell(shape=(features_size[1], features_size[0]), input_channels=64, filter_size=5, num_features=512),
             ])
-
         # endregion
 
         self.reg_layer = nn.Sequential(
@@ -67,7 +66,6 @@ class MyModel(nn.Module):
     def forward(self, x):
         x = self.features(x[0])
         x = x.unsqueeze(dim=0)
-        print('forward', x.shape)
 
         x, _ = self.encoder(x)[-1]  # ENCODER RETURNS ((hy, cy)), WE NEED hy
 

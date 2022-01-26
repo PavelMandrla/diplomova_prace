@@ -18,10 +18,11 @@ class Trainer(object):
         self.save_dir = self.get_save_dir()
 
         self.dataloaders = {  # TODO -> move constants to args
-            'train': DataLoader(dataset=FDST("../datasets/our_dataset", training=True, sequence_len=5),
+            'train': DataLoader(dataset=FDST("../datasets/our_dataset", training=True, sequence_len=5, stride=3),
                                 batch_size=1,
                                 shuffle=True,
                                 num_workers=1),
+
             'test': DataLoader(dataset=FDST("../datasets/our_dataset", training=True, sequence_len=5),
                                batch_size=1,
                                shuffle=True,
@@ -33,7 +34,7 @@ class Trainer(object):
         self.model.to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
-        model_path = './save_dir/17_ckpt.tar'
+        model_path = './save_dir/m2/before/20_ckpt.tar'
         save = torch.load(model_path)
         self.model.load_state_dict(save['model_state_dict'], self.device)
 
@@ -49,7 +50,7 @@ class Trainer(object):
 
     def get_save_dir(self):
         # TODO -> maybe generate new directory for each new model depending on its params
-        save_dir = 'save_dir'
+        save_dir = 'save_dir/m2'
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
         return save_dir

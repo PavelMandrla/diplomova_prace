@@ -9,7 +9,7 @@ def parse_args():
     parser.add_argument('--device',                         default='0',    help='assign device')
     parser.add_argument('--lr',                 type=float, default=1e-5,   help='initial learning rate')
     parser.add_argument('--weight-decay',       type=float, default=1e-4,   help='weight decay')
-    parser.add_argument('--max-epoch',          type=int,   default=1000,   help='max training epoch')
+    parser.add_argument('--max-epoch',          type=int,   default=40,     help='max training epoch')
     parser.add_argument('--crop-size',          type=int,   default=512,    help='crop size of the train image')
     parser.add_argument('--wot',                type=float, default=0.1,    help='weight on OT loss')
     parser.add_argument('--wtv',                type=float, default=0.01,   help='weight on TV loss')
