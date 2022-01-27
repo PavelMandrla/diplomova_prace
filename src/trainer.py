@@ -7,6 +7,7 @@ from utils import AverageMeter
 from models.model import MyModel
 from torch.utils.data import DataLoader
 from datasets.fdst import FDST
+from tqdm import tqdm
 
 
 class Trainer(object):
@@ -51,8 +52,9 @@ class Trainer(object):
         #endregion
 
         self.model.train()  # Set model to training mode
+        t = tqdm(self.dataloader, leave=False, total=len(self.dataloader))
 
-        for step, (inputs, points, gt_discrete) in enumerate(self.dataloader):
+        for step, (inputs, points, gt_discrete) in enumerate(t):
             inputs = inputs.to(self.device)
             gd_count = np.array([len(p) for p in points], dtype=np.float32)
             points = [p.to(self.device) for p in points]
