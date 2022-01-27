@@ -17,6 +17,7 @@ class MyModel(nn.Module):
         """
         super(MyModel, self).__init__()
         self.channels = 3
+        self.input_size = input_size
         self.seq_len = sequence_len
         self.stride = stride
 
