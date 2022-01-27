@@ -38,21 +38,40 @@ def gen_discrete_map(im_height, im_width, points):
 
 class FDST(Dataset):
 
-    def __init__(self, root_path, training=True, sequence_len=5, crop_size=(512, 512), crop_origin_x=0, crop_origin_y=0, downsample_ratio=2, stride=1):
+    def __init__(
+            self,
+            root_path,
+            training=True,
+            sequence_len=5,
+            crop_size=(512, 512),
+            crop_origin=(0, 0),
+            downsample_ratio=2,
+            stride=1,
+            max_sequence_len=0,
+            max_stride=0
+    ):
         """
-        Constructor of FDST dataset loader
         :param root_path: path to the root directory of the dataset
-        :param training: indicates, whether we want to load the data from the train_data or ther test_data subdirectory
+        :param training: indicates, whether we want to load the data from the train_data or their test_data subdirectory
         :param sequence_len: number of images, that are contained in one item
+        :param crop_size: the size of the resulting images (width, height)
+        :param crop_origin: if the crop is not random (in trainig), sets the position, from which to crop the image
+        :param downsample_ratio: downsample_ratio
+        :param stride: stride in the sequence of images
+        :param max_sequence_len: for comparison between dataset -> ensures, that the same inputs are compared when using different stride and seq_
+        :param max_stride: for comparison between dataset -> ensures, that the same inputs are compared when using different stride and seq_
         """
         self.data_path = os.path.join(root_path, "train_data" if training else "test_data")
         self.training = training
-        self.sequence_len = sequence_len
+        self.seq_len = sequence_len
         self.crop_size = crop_size
-        self.crop_origin_x = crop_origin_x
-        self.crop_origin_y = crop_origin_y
+        self.crop_origin = crop_origin
         self.d_ratio = downsample_ratio
         self.stride = stride
+
+        self.max_seq_len = max_sequence_len
+        self.max_stride = max_stride
+
         self.trans = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -63,7 +82,8 @@ class FDST(Dataset):
 
     def index_inputs(self):
         top_i = 0
-        overall_length = self.sequence_len * self.stride
+        overall_length = self.seq_len * self.stride
+        max_overall_length = self.max_seq_len * self.max_stride
 
         dir_items = os.listdir(self.data_path)      # GET ALL ITEMS IN DIRECTORY
         for name in dir_items:
@@ -73,13 +93,15 @@ class FDST(Dataset):
                 items.sort()
 
                 for i, item in enumerate(items):
+                    if not self.training and i < max_overall_length:
+                        continue
                     if i >= overall_length:
                         seq_start, seq_end = self.get_seq_bounds(i)
                         self.item_id_dict[top_i] = items[seq_start:seq_end:self.stride]
                         top_i += 1
 
     def get_seq_bounds(self, i):
-        overall_length = self.sequence_len * self.stride
+        overall_length = self.seq_len * self.stride
         seq_start = i - overall_length + self.stride
         seq_end = i + 1
         return seq_start, seq_end
@@ -137,7 +159,7 @@ class FDST(Dataset):
             w, h = scaled_crop_size   # TODO -> REMOVE h, w?
         else:
             scaled_crop_size = self.crop_size
-            crop_origin_x, crop_origin_y = self.crop_origin_x, self.crop_origin_y           #ratio = self.crop_size[0] / scaled_crop_size[0]
+            crop_origin_x, crop_origin_y = self.crop_origin           #ratio = self.crop_size[0] / scaled_crop_size[0]
             w, h = scaled_crop_size                                                         #keypoints /= ratio
 
         imgs = [F.crop(img, crop_origin_y, crop_origin_x, h, w) for img in imgs]
@@ -194,5 +216,5 @@ class FDST(Dataset):
         if self.training:
             return None
         else:
-            imgs = [F.crop(img, self.crop_origin_y, self.crop_origin_x, self.crop_size[1], self.crop_size[0]) for img in images]
+            imgs = [F.crop(img, self.crop_origin[1], self.crop_origin[0], self.crop_size[1], self.crop_size[0]) for img in images]
             return imgs[-1]

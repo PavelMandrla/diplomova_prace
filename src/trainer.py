@@ -1,5 +1,4 @@
 import os.path
-import time
 import numpy as np
 import torch
 from torch import optim, nn
@@ -16,44 +15,24 @@ class Trainer(object):
         self.args = args
 
         self.save_dir = self.get_save_dir()
+        dataset = FDST(args.dataset_path, training=True, sequence_len=args.sequence_length, stride=args.stride)
+        self.dataloader = DataLoader(dataset=dataset, batch_size=1, shuffle=True, num_workers=1)
 
-        self.dataloaders = {  # TODO -> move constants to args
-            'train': DataLoader(dataset=FDST("../datasets/our_dataset", training=True, sequence_len=5, stride=3),
-                                batch_size=1,
-                                shuffle=True,
-                                num_workers=1),
-
-            'test': DataLoader(dataset=FDST("../datasets/our_dataset", training=True, sequence_len=5),
-                               batch_size=1,
-                               shuffle=True,
-                               num_workers=1)
-        }
-
-        self.model = MyModel()
+        self.model = MyModel(sequence_len=args.sequence_length, stride=args.stride)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
-        model_path = './save_dir/m2/before/20_ckpt.tar'
-        save = torch.load(model_path)
-        self.model.load_state_dict(save['model_state_dict'], self.device)
-
-        downsample_ratio = 2 # TODO -> CHANGE??? IS IT OK??
+        downsample_ratio = 2        # TODO -> CHANGE??? IS IT OK??
         self.ot_loss = OT_Loss(args.crop_size, downsample_ratio, args.norm_cood, self.device, args.num_of_iter_in_ot, args.reg)
         self.tv_loss = nn.L1Loss(reduction='none').to(self.device)
         self.mse = nn.MSELoss().to(self.device)
         self.mae = nn.L1Loss().to(self.device)
-        # self.save_list = Save_Handle(max_num=1)
-        self.best_mae = np.inf
-        self.best_mse = np.inf
-        self.best_count = 0
 
     def get_save_dir(self):
-        # TODO -> maybe generate new directory for each new model depending on its params
-        save_dir = 'save_dir/m2'
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-        return save_dir
+        if not os.path.exists(self.args.save_dir):
+            os.makedirs(self.args.save_dir)
+        return self.args.save_dir
 
     def train(self):
         for epoch in range(self.args.max_epoch + 1):       # TODO -> maybe add checkpoint mechanism, like in DM-Count
@@ -69,12 +48,11 @@ class Trainer(object):
         epoch_loss = AverageMeter()
         epoch_mae = AverageMeter()
         epoch_mse = AverageMeter()
-        epoch_start = time.time()
         #endregion
 
         self.model.train()  # Set model to training mode
 
-        for step, (inputs, points, gt_discrete) in enumerate(self.dataloaders['train']):
+        for step, (inputs, points, gt_discrete) in enumerate(self.dataloader):
             inputs = inputs.to(self.device)
             gd_count = np.array([len(p) for p in points], dtype=np.float32)
             points = [p.to(self.device) for p in points]
@@ -113,13 +91,8 @@ class Trainer(object):
                 #endregion
 
         print("avg_epoch_loss: ", epoch_loss.avg)
-        model_state_dic = self.model.state_dict()
         save_path = os.path.join(self.save_dir, '{}_ckpt.tar'.format(epoch))
-        torch.save({
-            'epoch': epoch,
-            'optimizer_state_dict': self.optimizer.state_dict(),
-            'model_state_dict': model_state_dic
-        }, save_path)
+        self.model.save(save_path)
 
     def get_OT_loss(self, outputs, outputs_normed, points):
         ot_loss, wd, ot_obj_value = self.ot_loss(outputs_normed, outputs, points)

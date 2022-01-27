@@ -71,13 +71,14 @@ class CGRU_cell(nn.Module):
 class CLSTM_cell(nn.Module):
     """ConvLSTMCell
     """
-    def __init__(self, shape, input_channels, filter_size, num_features):
+    def __init__(self, shape, input_channels, filter_size, num_features, seq_len):
         super(CLSTM_cell, self).__init__()
 
         self.shape = shape  # H, W
         self.input_channels = input_channels
         self.filter_size = filter_size
         self.num_features = num_features
+        self.seq_len = seq_len
         # in this way the output has the same size
         self.padding = (filter_size - 1) // 2
         self.conv = nn.Sequential(
@@ -87,7 +88,7 @@ class CLSTM_cell(nn.Module):
             # NOTE: currently is 0
         )
 
-    def forward(self, inputs=None, hidden_state=None, seq_len=5):  # TODO -> change the seq_length
+    def forward(self, inputs=None, hidden_state=None):  # TODO -> change the seq_length
         #  seq_len=10 for moving_mnist
         if hidden_state is None:
             hx = torch.zeros(inputs.size(1), self.num_features, self.shape[0], self.shape[1]).cuda()
@@ -95,7 +96,7 @@ class CLSTM_cell(nn.Module):
         else:
             hx, cx = hidden_state
         output_inner = []
-        for index in range(seq_len):
+        for index in range(self.seq_len):
             if inputs is None:
                 x = torch.zeros(hx.size(0), self.input_channels, self.shape[0], self.shape[1]).cuda()
             else:

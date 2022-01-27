@@ -17,6 +17,11 @@ def parse_args():
     parser.add_argument('--num-of-iter-in-ot',  type=int,   default=100,    help='sinkhorn iterations')
     parser.add_argument('--norm-cood',          type=int,   default=0,      help='whether to norm cood when computing distance')
 
+    parser.add_argument('--dataset_path',       type=str,   default='../datasets/our_dataset', help='paht to the dataset')
+    parser.add_argument('--stride',             type=int,   default=1,      help='stride between dataset images in sequence')
+    parser.add_argument('--sequence_length',    type=int,   default=5,      help='length of input sequence')
+    parser.add_argument('--save_dir',           type=str,   default='../save_dir/m3', help='folder to which to save the trained models')
+
     args = parser.parse_args()
     return args
 

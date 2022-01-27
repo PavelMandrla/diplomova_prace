@@ -8,9 +8,22 @@ from .ConvRNN import CLSTM_cell
 
 
 class MyModel(nn.Module):
-    def __init__(self, model_path=None, input_size=(512, 512)):
+    def __init__(self, model_path=None, input_size=(512, 512), sequence_len=5, stride=1):
+        """
+        :param model_path: If pretrained, insert the path to the file
+        :param input_size: Size of the input images (width, height)
+        :param sequence_len: Length of the input sequence
+        :param stride: Not really used for anything in the model, but it is good to know, when creating a dataloader
+        """
         super(MyModel, self).__init__()
         self.channels = 3
+        self.seq_len = sequence_len
+        self.stride = stride
+
+        if model_path is not None:
+            saved_model = torch.load(model_path)
+            self.seq_len = saved_model['sequence_length']
+            self.stride = saved_model['stride']
 
         # region INIT FEATURES
         resnet = resnet18(True, True)
@@ -28,13 +41,24 @@ class MyModel(nn.Module):
 
         # region INIT CONVLSTM
         features_size = self.get_size_after_features(input_size)
-        self.encoder = Encoder([
+        self.encoder = Encoder(
+            [
                 OrderedDict({'conv1_leaky_1': [512, 64, 3, 1, 1]}),
                 OrderedDict({'conv2_leaky_1': [64, 64, 3, 1, 1]}),
             ],
             [
-                CLSTM_cell(shape=(features_size[1], features_size[0]), input_channels=64, filter_size=5, num_features=64),
-                CLSTM_cell(shape=(features_size[1], features_size[0]), input_channels=64, filter_size=5, num_features=512),
+                CLSTM_cell(
+                    shape=(features_size[1], features_size[0]),
+                    input_channels=64,
+                    filter_size=5,
+                    num_features=64,
+                    seq_len=self.seq_len),
+                CLSTM_cell(
+                    shape=(features_size[1], features_size[0]),
+                    input_channels=64,
+                    filter_size=5,
+                    num_features=512,
+                    seq_len=self.seq_len)
             ])
         # endregion
 
@@ -84,3 +108,10 @@ class MyModel(nn.Module):
         input = torch.zeros(1,3,input_size[1], input_size[0])
         output = self.features(input)
         return output.shape[:-3:-1]  # return last two in reverse order (width, height)
+
+    def save(self, path):
+        torch.save({
+            'sequence_length': self.seq_len,
+            'stride': self.stride,
+            'model_state_dict': self.state_dict()
+        }, path)

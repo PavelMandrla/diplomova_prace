@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 from timeit import default_timer as timer
 from torchvision import transforms
+from tqdm import tqdm
 
 
 def show_image(input_tensor, head_pos=None):
@@ -199,8 +200,25 @@ def plot_timeseries(model, dataset, device, range_from, range_to):
             mu, mu_normed = model(image)
         counts.append((torch.sum(mu).item(), real_count))
 
-    with open('counts.csv', 'w+') as file:
+    with open('counts5_3.csv', 'w+') as file:
         for count in counts:
             file.write('%.3f, %.3f\n' % (count[1], count[0]))
     #plot_results(counts)
 
+
+def evaluate_dataset(model, dataloader, device):
+    counts = []
+    t = tqdm(dataloader, leave=False, total=len(dataloader))
+    for i, data in enumerate(t):
+        image = data[0]
+        real_count = data[1].size()[1]
+
+        image = image.to(device)
+        with torch.set_grad_enabled(False):
+            mu, mu_normed = model(image)
+
+        counts.append((torch.sum(mu).item(), real_count))
+
+    with open('counts5_3.csv', 'w+') as file:
+        for count in counts:
+            file.write('%.3f, %.3f\n' % (count[1], count[0]))
