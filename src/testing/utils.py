@@ -124,86 +124,72 @@ def eval_video(model, vid_path, device, sequence_len=5, stride=1):
             break
 
 
-def animate_video(model, vid_path, device, sequence_len=5, stride=1):
-    cap = cv2.VideoCapture(vid_path)
-    results = []
-
-    if not cap.isOpened():
-        raise "could not open video file %s" % vid_path
-
-    frame_buffer = []
-    buffer_size = sequence_len * stride
-
+def cv_frame_to_tensor(frame, size):
     norm = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 
-    #while cap.isOpened():
-    for i in range(1000):
+    frame = cv2.resize(frame, size)
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    frame = frame.astype('float32')
+    frame /= 255.0
+
+    frame_tensor = torch.from_numpy(frame)
+    frame_tensor = torch.permute(frame_tensor, (2, 0, 1))
+    frame_tensor = norm(frame_tensor)
+
+    return frame_tensor
+
+
+def animate_video(model, device, src_path, save_path):
+    cap = cv2.VideoCapture(src_path)
+    if not cap.isOpened():
+        raise "video file %s not found" % src_path
+
+    frame_num = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(save_path, fourcc, 30, (frame_width, frame_height))
+
+    frame_buffer = []
+    buffer_size = model.seq_len * model.stride
+
+    while cap.isOpened():
         ret, frame = cap.read()
         if ret:
-            frame = cv2.resize(frame, (1280, 720))
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = frame.astype('float32')
-            frame /= 255.0
+            frame_buffer.append(cv_frame_to_tensor(frame, model.input_size))
 
-            frame_tensor = torch.from_numpy(frame)
-            frame_tensor = torch.permute(frame_tensor, (2, 0, 1))
-            frame_tensor = norm(frame_tensor)
-            frame_buffer.append(frame_tensor)
             if len(frame_buffer) < buffer_size:
                 continue
 
-            input = torch.stack(frame_buffer[:buffer_size:stride]).unsqueeze(0)
-            input = input.to(device)
+            sequence = torch.stack(frame_buffer[:buffer_size:model.stride]).unsqueeze(0).to(device)
 
             with torch.set_grad_enabled(False):
-                mu, mu_normed = model(input)
+                mu, mu_normed = model(sequence)
 
-            vis_img = colorize_heat_map(mu)
-            vis_img = cv2.cvtColor(vis_img, cv2.COLOR_BGR2RGB)
+            heat_map = colorize_heat_map(mu)
 
-            results.append((cv2.resize(frame, (640, 368)), vis_img, torch.sum(mu).item()))
-            print(len(results))
+            x_offset = frame.shape[1] - heat_map.shape[1]
+            y_offset = frame.shape[0] - heat_map.shape[0]
+            frame[y_offset:frame.shape[0], x_offset:frame.shape[1]] = heat_map
 
+            text_org = (25, 50)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 2
+            text_color = (255, 0, 0)
+            text_thickness = 2
+            frame = cv2.putText(frame, '%.2f' % torch.sum(mu).item(), text_org, font, font_scale, text_color, text_thickness, cv2.LINE_AA)
+
+            out.write(frame)
+
+            # cv2.imshow("frame", frame)
+            # cv2.waitKey(20)
             frame_buffer.pop(0)
         else:
             break
 
-    fig, axs = plt.subplots(1, 2)
-    def animate(i):
-        axs[0].set_title('%.2f' % (results[i][2]), fontsize = 14)
-        im1 = axs[0].imshow(results[i][1])
-        axs[1].set_title('input', fontsize=14)
-        im2 = axs[1].imshow(results[i][0])
-        return im1, im2
+    cap.release()
+    out.release()
 
-    ani = FuncAnimation(fig, animate, interval=40, blit=True, repeat=True, frames=len(results))
-    ani.save("TLI.gif", dpi=300, writer=PillowWriter(fps=25))
-
-
-def plot_timeseries(model, dataset, device, range_from, range_to):
-    counts = []
-
-    def plot_results(results):
-        plt.plot([x for x, _ in results])
-        plt.plot([x for _, x in results])
-        plt.ylabel('some numbers')
-        plt.show()
-
-    for i in range(range_from, range_to):
-        print(i - range_from, range_to - range_from)
-        data = dataset[i]
-        image = data[0].unsqueeze(dim=0)
-        real_count = len(data[1])
-
-        image = image.to(device)
-        with torch.set_grad_enabled(False):
-            mu, mu_normed = model(image)
-        counts.append((torch.sum(mu).item(), real_count))
-
-    with open('counts5_3.csv', 'w+') as file:
-        for count in counts:
-            file.write('%.3f, %.3f\n' % (count[1], count[0]))
-    #plot_results(counts)
 
 
 def evaluate_dataset(model, dataloader, device):

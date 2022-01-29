@@ -36,8 +36,11 @@ class Trainer(object):
         return self.args.save_dir
 
     def train(self):
-        for epoch in range(self.args.max_epoch + 1):       # TODO -> maybe add checkpoint mechanism, like in DM-Count
+        for epoch in range(1, self.args.max_epoch + 1):       # TODO -> maybe add checkpoint mechanism, like in DM-Count
             self.train_epoch(epoch)
+            if epoch % 5 == 0:
+                save_path = os.path.join(self.save_dir, '{}_ckpt.tar'.format(epoch))
+                self.model.save(save_path)
 
     def train_epoch(self, epoch):
         #region Setup for measuring
@@ -53,6 +56,7 @@ class Trainer(object):
 
         self.model.train()  # Set model to training mode
         t = tqdm(self.dataloader, leave=False, total=len(self.dataloader))
+        t.set_description("Epoch: %i" % epoch)
 
         for step, (inputs, points, gt_discrete) in enumerate(t):
             inputs = inputs.to(self.device)
@@ -62,7 +66,7 @@ class Trainer(object):
             N = inputs.size(0)
 
             with torch.set_grad_enabled(True):
-                outputs, outputs_normed = self.model(inputs) #'tuple' object has no attribute 'dim'
+                outputs, outputs_normed = self.model(inputs)
 
                 # region CALCULATE EPOCH LOSSES
                 ot_loss, ot_obj_value, wd = self.get_OT_loss(outputs, outputs_normed, points)
@@ -92,9 +96,7 @@ class Trainer(object):
                 epoch_mae.update(np.mean(abs(pred_err)), N)
                 #endregion
 
-        print("avg_epoch_loss: ", epoch_loss.avg)
-        save_path = os.path.join(self.save_dir, '{}_ckpt.tar'.format(epoch))
-        self.model.save(save_path)
+        t.set_postfix(avg_epoch_loss = epoch_loss.avg)
 
     def get_OT_loss(self, outputs, outputs_normed, points):
         ot_loss, wd, ot_obj_value = self.ot_loss(outputs_normed, outputs, points)

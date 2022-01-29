@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from testing.utils import *
 import matplotlib.pyplot as plt
 
-model_path = './trained_models/len5_stride1.tar'
+model_path = './trained_models/len1_stride1.tar'
 dataset_path = '../datasets/our_dataset'
 input_size = (1920, 1080)
 
@@ -30,6 +30,7 @@ evaluate_dataset(model, dataloader, device)
 # eval_video(model, '../datasets/VSB/20211005_120808.MOV', device, stride=3, sequence_len=5)
 # range_real_time(model, dataset, device, 220, 700)
 # animate_range(model, dataset, device)
+# animate_video(model, device, '../datasets/VSB/20211005_120808.MOV', './save_dir/entry.mp4')
 
 
 
