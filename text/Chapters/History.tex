@@ -14,10 +14,18 @@ Nepřímé metody počítání lidí se tento problém snaží vyřešit tím, �
 měří veličiny, které nejsou založeny na znalosti pozice každého člověka ve scéně.
 
 Conte, Foggia, Percannella et al. ve svém článku \cite{crowd_on_pets} vytvořili estimátor, jenž určoval počet lidí na základě počtu a hustoty SURF příznaků nacházejících se v popředí snímku.
-Tento postup je založen na myšlence, že v hustém davu, kde bude docházet k mnoha okluzím, se bude vyskytovat velké množství zájmových bodů, zatímco jsou-li lidé ve snímku od sebe izolováni, bude v dané oblasti SURF bodů méně.
+Tento postup je založen na myšlence, že v hustém davu, kde bude docházet k mnoha okluzím, se bude vyskytovat velké množství zájmových bodů, zatímco v případě, kdy jsou lidé ve snímku od sebe izolováni, bude v dané oblasti SURF bodů méně.
 O tom, zda příznak patří do popředí, je rozhodnuto na základě vektoru popisujícího pohyb daného zájmového bodu mezi dvěma po sobě jdoucími snímky.
-Autoři předpokládají, že i statičtí lidé se mírně pohybují, a proto všechny zájmové body s délkou pohybového vektoru větší, než je nějaký stanovený práh jsou označeny, že patří lidem.
+Autoři předpokládají, že i statičtí lidé se mírně pohybují, a proto všechny zájmové body s délkou pohybového vektoru větší, než je nějaký stanovený práh, jsou označeny, že patří lidem.
 Přesnost tohoto detektoru proto bude velice snadno ovlivněna výskytem jiných pohybujících se objektů, které se mohou v obraze nacházet jako například automobily.
+Autoři článku se také snaží odstranit negativní účinky perspektivy na přesnost výsledku, a to tím, že blízké zájmové body shlukují do skupin, které ohodnocují zvlášť.
+Výslednou funkci, která pro shluk vrátí počet lidí, kteří se v něm nacházejí, je získaná pomocí SVR a je závislá na počtu bodů ve shluku, jejich hustotě a velikosti evaluovaného shluku.
+
+
+S narůstající popularitou neuronových sítí v oblasti strojového vidění přirozeně narůstá i množství estimátorů počítajících objekty v obraze, které jsou na neuronových sítích založeny.
+Například autoři článku \cite{YOLO_counting} pro tento účel upravili detekční síť YOLO.
+Jejich úpravy této sítě spočívaly hlavně v rozdělení obrazu do více buněk a ve větším počtu bounding boxů počítaných pro každou buňku v obraze. Výslednou síť natrénovali tak, ať je citlivá na lidi.
+Počet lidí v obraze byl stanoven jako počet bounding boxů, které se nacházely v oblasti, kterou v obraze vytyčili.
 
 
 
