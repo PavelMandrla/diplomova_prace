@@ -1,0 +1,27 @@
+\chapter{Historie}
+\label{sec:History}
+Moderní metody počítání lidí v obraze využívají neuronové sítě, avšak experimenty v této přišly již dlouho před tím, než se staly neuronové sítě populární.
+Pro spočítání osob v obraze tedy tehdy musely být využity jiné metody.
+Obecně se metody používané v této oblasti dají rozdělit do dvou kategorií a to na přímé (direct) a nepřímé (indirect). \cite{crowd_on_pets}
+
+Při použití přímých metod je použita nějaká forma segmentace obrazu a následně jsou jednotliví lidé v obraze detekováni a spočítáni. Do této kategorie by se dal zařadit například 
+
+ TODO
+
+Problémem přímých metod byla obtížná detekce jednotlivých lidí v hustě zalidněných scénách.
+V davech totiž často dochází k částečnému zakrývání jednotlivých lidí, jinými lidmi, což dělá proces segmentace a následné klasifikace velmi složitým.
+Nepřímé metody počítání lidí se tento problém snaží vyřešit tím, že pro stanovení počtu lidí ve scéně 
+měří veličiny, které nejsou založeny na znalosti pozice každého člověka ve scéně.
+
+Conte, Foggia, Percannella et al. ve svém článku \cite{crowd_on_pets} vytvořili estimátor, jenž určoval počet lidí na základě počtu a hustoty SURF příznaků nacházejících se v popředí snímku.
+Tento postup je založen na myšlence, že v hustém davu, kde bude docházet k mnoha okluzím, se bude vyskytovat velké množství zájmových bodů, zatímco jsou-li lidé ve snímku od sebe izolováni, bude v dané oblasti SURF bodů méně.
+O tom, zda příznak patří do popředí, je rozhodnuto na základě vektoru popisujícího pohyb daného zájmového bodu mezi dvěma po sobě jdoucími snímky.
+Autoři předpokládají, že i statičtí lidé se mírně pohybují, a proto všechny zájmové body s délkou pohybového vektoru větší, než je nějaký stanovený práh jsou označeny, že patří lidem.
+Přesnost tohoto detektoru proto bude velice snadno ovlivněna výskytem jiných pohybujících se objektů, které se mohou v obraze nacházet jako například automobily.
+
+
+
+
+
+
+\endinput
