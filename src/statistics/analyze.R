@@ -1,23 +1,26 @@
 library(vioplot)
 library(moments)
 library(dplyr)
+library(lawstat)
+library(Metrics)
 
-load_data <- function (files, omit_outliers) {
-  tmp_file_data = as.data.frame(read.csv(file=files[[1]][1]))
-  colnames(tmp_file_data) = c("truth", "pred")
-
+load_errs <- function (files, omit_outliers) {
   data = data.frame()
   names = c()
 
+  print("NUMBER OF OUTLIERS", quote=FALSE)
   for (file in files) {
     file_data <- as.data.frame(read.csv(file=file[1]))
     colnames(file_data) = c("truth", "pred")
     file_data$err = file_data$truth - file_data$pred
 
+
+    tmp = boxplot(file_data$err)
+    print(sprintf('   %s: %d', file[2], length(tmp$out)), quote=FALSE)
     if (omit_outliers) {
-      tmp = boxplot(file_data$err)
       file_data$err[file_data$err %in% tmp$out] = NA
     }
+
 
     if (nrow(data) == 0) {
       data = cbind(file_data$err)
@@ -35,64 +38,98 @@ load_data <- function (files, omit_outliers) {
   result = data.s
 }
 
+load_data <- function (files) {
+  data = data.frame()
+  names = c("truth")
+
+  for (file in files) {
+    file_data <- as.data.frame(read.csv(file=file[1]))
+    colnames(file_data) = c("truth", "pred")
+
+    if (nrow(data) == 0) {
+      data = cbind(file_data$truth, file_data$pred)
+    } else {
+      data = cbind(data, file_data$pred)
+    }
+    names = c(names, file[2])
+  }
+  data = as.data.frame(data)
+  print(names)
+  colnames(data) = names
+  #data.s = stack(data)
+  #result = data.s
+  result = data
+}
+
 files = list(
   c('./statistics/data/counts1_1_40.csv', '1_1'),
   c('./statistics/data/counts5_1.csv',    '5_1'),
   c('./statistics/data/counts5_3.csv',    '5_3')
 )
 
-test = load_data(files, FALSE)
 
+data = load_data(files)
+print("MAE")
+Metrics::mae(actual = data$truth, predicted = data$`5_3`)
+Metrics::mae(actual = data$truth, predicted = data$`5_1`)
+Metrics::mae(actual = data$truth, predicted = data$`1_1`)
+
+print("RMSE")
+Metrics::rmse(actual = data$truth, predicted = data$`5_3`)
+Metrics::rmse(actual = data$truth, predicted = data$`5_1`)
+Metrics::rmse(actual = data$truth, predicted = data$`1_1`)
+
+print("MAPE")
+Metrics::mape(actual = data$truth, predicted = data$`5_3`)
+Metrics::mape(actual = data$truth, predicted = data$`5_1`)
+Metrics::mape(actual = data$truth, predicted = data$`1_1`)
+
+
+
+
+
+
+
+
+
+
+# data = load_errs(files, TRUE)
 #
-# counts5_1 <- as.data.frame(read.csv(file = './statistics/data/counts5_1.csv'))
-# colnames(counts5_1) = c("truth", "pred")
-# counts5_1$err = counts5_1$truth - counts5_1$pred
-# #tmp = boxplot(counts5_1$err)
-# #counts5_1$err[counts5_1$err %in% tmp$out] = NA
 #
-# counts5_3 <- as.data.frame(read.csv(file = './statistics/data/counts5_3.csv'))
-# colnames(counts5_3) = c("truth", "pred")
-# counts5_3$err = counts5_3$truth - counts5_3$pred
-# #tmp = boxplot(counts5_3$err)
-# #counts5_3$err[counts5_3$err %in% tmp$out] = NA
+# vioplot(data$values~data$ind)
 #
-# counts1_1 <- as.data.frame(read.csv(file = './statistics/data/counts1_1_40.csv'))
-# colnames(counts1_1) = c("truth", "pred")
-# counts1_1$err = counts1_1$truth - counts1_1$pred
-# #tmp = boxplot(counts1_1$err)
-# #counts1_1$err[counts1_1$err %in% tmp$out] = NA
+# # OVĚŘENÍ NORMALITY
+# print('NORMALITA:', quote=FALSE)
+# data %>% group_by(ind) %>% summarise(norm.pval = shapiro.test(values)$p.value)
 #
-# data = as.data.frame(cbind(counts5_1$err, counts5_3$err, counts1_1$err))
-# data_err.s = stack(data)
-# data_err.s = na.omit(data_err.s)
-# vioplot(data_err.s$values~data_err.s$ind)
+# # POKUD ZAMÍTÁM NORMALITU
+# #   TEST SYMETRIE
+# print('SYMETRIE:', quote=FALSE)
+# data %>% group_by(ind) %>% summarise(test.pval = lawstat::symmetry.test(values, boot=FALSE)$p.value)
 #
 #
-# #
-# # data = as.data.frame(cbind(counts5_1$truth, counts5_1$pred, counts5_3$pred, counts1_1$pred))
-# # colnames(data) = c("truth", "pred_5_1", "pred_5_3", "pred_1_1")
-# #
-# # data$err_5_1 = data$truth - data$pred_5_1
-# # data$err_5_3 = data$truth - data$pred_5_3
-# # data$err_1_1 = data$truth - data$pred_1_1
-# #
-# # data_err = as.data.frame(cbind(data$err_5_1, data$err_5_3, data$err_1_1))
-# # data_err.s = stack(data_err)
-# #
-# # vioplot(data_err.s$values~data_err.s$ind)
-# # # boxplot(data_err.s$values~data_err.s$ind)
-# #
-# # pro výběry ověříme normalitu
-# data_err.s %>% group_by(ind) %>% summarise(norm.pval = shapiro.test(values)$p.value)
-# #
-# # # homeoskedasticita - test pro ověření shody rozptylů
-# # # výběry jsou z normálního rozdělení -> Bartlettův test
-#
-# bartlett.test(data_err.s$values ~ data_err.s$ind)
-#
+# a = data %>% filter(ind == "5_1") %>% mutate(rounded = round(values, 1))
+# print(shapiro.test(a$values))
+# hist(a$rounded, breaks = 64)
+# print(shapiro.test(a$values))
+# #qqnorm(a$values)
+# #qqline(a$values)
+
+
+
+
+
+
+
+
+
+# POKUD NEZAMÍTÁM NORMALITU
+# # OVĚŘENÍ SHODY ROZPTYLŮ
+# # výběry jsou z normálního rozdělení -> Bartlettův test
+# bartlett.test(data$values~data$ind)
 #
 # # ANOVA - porovnávám střední hodnoty výběrů
-# results = aov(data_err.s$values ~ data_err.s$ind)
+# results = aov(data$values~data$ind)
 # summary(results)
 #
 # #POST HOC analýza - pro ANOVA Tukey HSD
