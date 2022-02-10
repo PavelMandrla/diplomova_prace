@@ -1,10 +1,14 @@
 \chapter{Historie}
 \label{sec:History}
-Současné moderní metody počítání lidí v obraze často využívají neuronové sítě, avšak experimenty v této oblasti přišly již dlouho před tím, než se staly neuronové sítě populární.
-Pro spočítání osob v obraze tedy tehdy musely být využity jiné metody.
-Obecně se metody používané v této oblasti dají rozdělit do dvou kategorií a to na přímé (direct) a nepřímé (indirect). \cite{crowd_on_pets}
 
-Přímé metody se vyznačují tím, že jednotliví lidé v obraze jsou nejdříve detekováni a výsledný počet je stanoven, jako počet těchto detekcí.
+Ačkoliv jsou dnes na řešení problému počítání lidí v obraze hojně používány neuronové sítě, historie této disciplíny sahá do doby před nástupem jejich popularity.
+Obecně se tehdejší metody dají rozdělit do dvou kategorií a to na přímé (direct) a nepřímé (indirect).
+
+\begin{description}
+
+\item[Přímé metody] jsou založené na velice intuitivním přístupu k řešení tohoto problému a to, že jednotliví lidé jsou ve vstupním obraze zvlášť detekování a výsledný počet lidí v obraze je roven počtu těchto detekcí. Výkon a přesnost takovéhoto estimátoru jsou tedy silně závislé na výkonu použitého detektoru lidí.
+Od toho se také odvíjí nevýhody tohoto přístupu, kdy například v hustě zalidněných scénách často dochází k částečným zakrytím jednotlivých lidí jinými lidmi, či objekty, což dělá segmentaci obrazu a následnou detekci lidí v něm výrazně problematičtější.
+
 Do této kategorie by se dal zařadit například estimátor popsaný v článku \cite{head_and_shoulders}.
 Vstupní obraz je nejdříve pomocí pomocí MID příznaků segmentován na popředí a pozadí.
 To znamená, že obraz je rozdělen do bloků dále rozdělených na buňky, pro které je vypočítána průměrná barva. Pokud se mezi dvěma po sobě jdoucími snímky v buňce průměrná barva změní více, než je hodnota stanoveného prahu, nachází se blok, ve kterém se nachází, v popředí.
@@ -12,10 +16,15 @@ Autoři předpokládají, že lidé se v obraze mírně pohybují a proto bude m
 V segmentovaném obraze jsou poté vyhledáni jednotliví lidé a následně je podle počtu detekcí stanoven jejich počet.
 Toho je docíleno pomocí detektoru založeného na metodě sliding window, kdy obsah detekčního okna je popsán příznaky HOG a o klasifikaci se stará klasifikátor AdaBoost \cite{AdaBoost}, který byl natrénovaný na obrázcích lidí obsahující jejich hlavy a ramena.
 
-Přímé metody se však často potýkají s problémy v hustě zalidněných scénách.
-V davech totiž často dochází k částečnému zakrývání jednotlivých lidí jinými lidmi, což dělá proces segmentace a následné klasifikace velmi složitým.
-Nepřímé metody počítání lidí se tento problém snaží vyřešit tím, že pro stanovení počtu lidí ve scéně 
-měří veličiny, které nejsou založeny na znalosti pozice každého člověka ve scéně.
+Také by se tady dala zařadit práce \cite{YOLO_counting}, ve které autoři počítají osoby pomocí upravené neuronové sítě YOLO.
+Jejich úpravy této sítě spočívaly hlavně v rozdělení obrazu do více buněk a ve větším počtu bounding boxů počítaných pro každou buňku v obraze. Výslednou síť natrénovali tak, ať je citlivá na lidi.
+Počet lidí v obraze byl stanoven jako počet bounding boxů, které se nacházely v oblasti, kterou v obraze vytyčili.
+Autoři totiž systém zamýšleli pro použití na počítání lidí vycházejících z eskalátoru nebo na jiných místech, kde si mohli být jisti, že lidé budou procházet úzkým prostorem, který bude blízko kamery snímající scénu, takže jednotliví lidé budou v obraze v okamžiku započítání celkem dobře separováni a budou zabírat velké procento scény.
+U scén, kde toto není možné by ale nejspíš tento přístup narážel na stejné problémy, jako jiné přímé metody.
+
+
+\item[Nepřímé metody] vznikly v reakci na problémy přímých metod, které se snaží vyřešit.
+Na rozdíl od nich se tedy snaží určit počet lidí v obraze bez nutnosti znalosti pozice každého z nich a místo toho měří jiné veličiny.
 
 Autoři článku \cite{crowd_on_pets} vytvořili estimátor, jenž určoval počet lidí na základě počtu a hustoty SURF příznaků nacházejících se v popředí snímku.
 Tento postup je založen na myšlence, že v hustém davu, kde bude docházet k mnoha okluzím, se bude vyskytovat velké množství zájmových bodů, zatímco v případě, kdy jsou lidé ve snímku od sebe izolováni, bude v dané oblasti SURF bodů méně.
@@ -32,25 +41,47 @@ Výslednou funkci, která pro shluk vrátí počet lidí, kteří se v něm nach
 	\label{fig:PETS}
 \end{figure}
 
+\end{description}
+
 
 S narůstající popularitou neuronových sítí v oblasti strojového vidění přirozeně narůstá i množství estimátorů počítajících objekty v obraze, které jsou na neuronových sítích založeny.
-Například autoři článku \cite{YOLO_counting} pro tento účel upravili detekční síť YOLO.
-Jejich úpravy této sítě spočívaly hlavně v rozdělení obrazu do více buněk a ve větším počtu bounding boxů počítaných pro každou buňku v obraze. Výslednou síť natrénovali tak, ať je citlivá na lidi.
-Počet lidí v obraze byl stanoven jako počet bounding boxů, které se nacházely v oblasti, kterou v obraze vytyčili.
-Autoři totiž systém zamýšleli pro použití na počítání lidí vycházejících z eskalátoru nebo na jiných místech, kde si mohli být jisti, že lidé budou procházet úzkým prostorem, který bude blízko kamery snímající scénu, takže jednotliví lidé budou v obraze v okamžiku započítání celkem dobře separováni a budou zabírat velké procento scény.
-U scén, kde toto není možné by ale nejspíš tento přístup narážel na stejné problémy, jako jiné přímé metody.
+S nimi se objevila i nová a dnes velmi často používaná kategorie metod pro počítání objektů v obraze, kterou je počítání lidí pomocí hustotní mapy (Density Map Estimation).
 
-Řada nejmodernějších řešení se proto přiklání k nepřímému přístupu počítání objektů v obraze, a to tak, že ze vstupního snímku je vytvořena hustotní mapa, která popisuje odhadovanou hustotu davu v obraze, a výsledný počet lidí v obraze je stanoven na základě této hustotní mapy.
+\begin{description}
+\item[Density Map Estimation] se vyznačuje tím, že konvoluční neuronová síť se na základě vstupního obrazu vytvoří hustotní mapu, která popisuje odhadovanou hustotu davu v obraze, a výsledný počet lidí v obraze je stanoven na základě této mapy.
+
 Jednoduchý příklad, jak takovou hustotní mapu vytvořit je uveden v \cite{DeepCorn, Boominathan}.
-V trénovacím datasetu jsou označeny místa, kde se nachází jednotlivé hlavy lidí v obrázku obsažených.
-Pro každý takový bod je do hustotní mapy vložena Gaussova křivka tak, že \(\mu\) je rovno pozici bodu a obsah pod touto křivkou je roven jedné.
+V trénovacím datasetu jsou označeny místa, kde se nachází jednotlivé hlavy lidí v obrázku.
+Formálně by se to dalo vyjádřit pomocí pole Diracových impulsů.
+
+\begin{equation}
+H(x) = \sum_{i=1}^{M} \delta(x-x_i)
+\label{eq:density_map}
+\end{equation}
+
+
+Pro každý takovýto bod je do hustotní mapy vložena normalizovaná Gaussova křivka tak, že \(\mu\) je rovno pozici bodu.
 V ideálním případě by byla hodnota \(\sigma\) pro každý bod odvozena od velikosti patřičné hlavy.
-Dostupné datasety ale tuto informaci velmi často nemají a pro každou hlavu je známa pouze její pozice. Parametr \(\sigma\) je z toho důvodu často konstantní napříč celou hustotní mapou.
-Hodnota každého bodu hustotní mapy je následně získána jako suma všech gaussiánů v daném bodě.
+Dostupné datasety ale tuto informaci velmi často nemají a pro každou hlavu je známa pouze její pozice.
+Parametr \(\sigma\) je z toho důvodu často konstantní napříč celou hustotní mapou.
+Hodnota každého bodu hustotní mapy je následně získána jako suma všech gausiánů v daném bodě.
+
+\begin{equation}
+D(x) = H(x) * G_{\sigma}(x)
+\label{eq:density_map}
+\end{equation}
+
 Pokud tuto hustotní mapu zintegrujeme určitým integrálem, tak výsledná hodnota bude rovna počtu lidí, respektive hlav, v daném obraze.
 Cílem CNN je tedy naučit se co nejlépe replikovat takto vytvořené hustotní mapy pouze na základě neanotovaných vstupních obrazů.
 
-Mezi takovéto sítě se řadí například M-SFANet \cite{MSFANet_for_crowd_counting}.
+\begin{figure}[h!]
+	\centering
+	\subfloat[původní obrázek]{\includegraphics[width=0.4\textwidth]{Figures/history/heat_map_source.jpg}}
+	\subfloat[výsledná hustotní mapa]{\includegraphics[width=0.4\textwidth]{Figures/history/heat_map.png}}
+	\caption{Ukázka hustotní mapy vytvořené pomocí Gausiánů}
+\end{figure}
+
+Mezi sítě využívající tento přístup se řadí například M-SFANet \cite{MSFANet_for_crowd_counting}.
 Obraz je dán na vstup sítě VGG-16bn \cite{VGG}, která slouží k získání příznaků.
 Následně je síť rozdělena na dvě části.
 Výstup z desáté vrstvy VGG je dán na vstup modulu CAN (Context-aware module) \cite{CAN_1, CAN_2}, který slouží z získání "scale-aware" příznaků a učí se jejich význam na základě jeho polohy v obraze, což pomáhá, je-li velikost lidí ve vstupním obraze výrazně ovlivněna perspektivou.
@@ -66,9 +97,7 @@ Hadamardův součin těchto map je následně použit jako ground truth pro tré
 	\label{fig:M-SFANet}
 \end{figure}
 
-
-
-
+\end{description}
 
 
 
