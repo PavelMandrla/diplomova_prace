@@ -59,7 +59,7 @@ Podobně jako v předchozím kroce jsou vstupní data společně se skrytým sta
 
 \begin{equation}
 i_t = \sigma(W_i \cdot [h_{t-1}, x_t] + b_i)
-\label{eq:input gate}
+\label{eq:input_gate}
 \end{equation}
 
 Než jsou ale data do stavu buňky přidána, jsou předtím zpracována vstupní modulační branou (Input Modulation gate), která je také tvořena FC vrstvou, ale používá jako aktivační funkci hyperbolický tangens (\(\tanh\)).
@@ -70,10 +70,10 @@ Výsledek této operace je po složkách vynásoben s výsledkem vstupní brány
 \label{eq:input_modulation_gate}
 \end{equation}
 
-Tímto jsou ukončeny veškeré modifikace stavu buňky \(C_t\) které by se daly vyjádřit rovnicí \ref{eq:cell_state_modification}.
+Tímto jsou ukončeny veškeré modifikace stavu buňky \(C_t\) které by se daly vyjádřit rovnicí \ref{eq:cell_state_modification}, kde operátor \(\circ\) značí Hadamardův součin.
 
 \begin{equation}
-C_t = f_t * C_{t-1} + i_t * \widetilde{C}_t
+C_t = f_t \circ C_{t-1} + i_t \circ \widetilde{C}_t
 \label{eq:cell_state_modification}
 \end{equation}
 
@@ -92,62 +92,54 @@ o_t = \sigma(W_o \cdot [h_{t-1}, x_t] + b_o)
 Výpočet výstupu LSTM buňky a jejího skrytého stavu lze tedy vyjádřit rovnicí \ref{eq:output}.
 
 \begin{equation}
-h_t = o_t * \tanh(C_t)
+h_t = o_t \circ \tanh(C_t)
 \label{eq:output}
 \end{equation}
 
 \end{enumerate}
 
+V literatuře se dá narazit i na verzi LSTM, která využívá tzv. špehýrková spojení (peephole connections), která byla přidána do LSTM architektury Gersem a Schidhuberem v roce 2000. \cite{PeepLSTM}
+Tato spojení způsobují, že ke vstupu všech bran, které mají sigmoidální aktivační funkci, je přidán i stav buňky. U zapomínácí a vstupní brány jde o \(h_{t-1}\), neboli stav buňky před jakýmikoliv modifikacemi, zatímco u brány výstupní je použit již modifikovaný stav  \(h_{t}\).
+Brány tedy rozhodují nejen na základě aktuálního vstupu a skrytého stavu buňky, ale i podle obsahu stavu buňky.
+Vzorce \ref{eq:forget_gate} a \ref{eq:input_gate} by tedy šly v tomto případě napsat podle vzoru \( A_t = \sigma(W_A \cdot [h_{t-1}, x_t, C_{t-1}] + b_A) \), kde za \(A\) dosadíme \(f\) nebo \(i\), a vzorec \ref{eq:output_gate} by vypadal \( o_t = \sigma(W_o \cdot [h_{t-1}, x_t, C_{t}] + b_o) \).
+
 
 Konvoluční LSTM vrstvy ConvLSTM spojují výhody konvolučních vrstev, které jsou skvělé pro zpracování prostorových informací a LSTM vrstev, které dobře zpracovávají temporální informace, a proto jsou jedním z nástrojů, které je možné použít pro práci s časoprostorovými daty.
 
-Stejně jako u tradiční konvoluční vrstvy jsou i u vrstvy ConvLSTM vstupem a výstupem matice.
-Co ale u tradiční konvoluční vrstvy chybí je nějaký mechanismus pro ukládání stavů.
-To je u ConvLSTM realizováno pomocí další matice, která je předávána mezi jednotlivými vstupy. Velikost této matice musí být známa ve chvíli konstrukce sítě a je stejná napříč celým výpočtem.
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=\textwidth]{Figures/solution/ConvLSTM_schema.pdf}
-	\caption{Struktura ConvLSTM}
-	\label{fig:LSTM_architecture}
-\end{figure}
-
+Na rozdíl od klasické LSTM vrstvy rozhoduje ConvLSTM o novém stavu buňky na základě jejího vstupu a jejích skrytých stav a také na základě vstupů a skrytých stavů jejích sousedů.
+Vstupy, výstupy a skryté stavy jsou z tohoto důvodu u ConvLSTM reprezentovány pomocí 3D tenzorů, jejichž poslední dvě dimenze jsou dimenze prostorové.
+Na tyto tenzor jsou následně použity konvoluční operace pro výpočet nového stavu buňky a skrytého stavu. Ekvivalenty vzorců popisujících jednotlivé brány v LSTM tedy vypadají následovně.
 
 \begin{equation}
-f_t = \sigma(W_{xf} * X_t + W_{hf} * H_{t-1} + W_{cf} \circ C_{t-1} + b_f)
+f_t = \sigma(W_{f} * [x_t, h_{t-1}] + b_f)
 \label{eq:ConvLSTM_forget_gate}
 \end{equation}
 
 \begin{equation}
-i_t = \sigma(W_{xi} * X_t + W_{hi} * H_{t-1} + W_{ci} \circ C_{t-1} + b_i)
-\label{eq:ConvLSTM_ipnut_gate}
+i_t = \sigma(W_{i} * [x_t, h_{t-1}] + b_i)
+\label{eq:ConvLSTM_input_gate}
 \end{equation}
 
 \begin{equation}
-\widetilde{C}_t = \tanh(W_{xc} * X_t + W_{hc} * H_{t-1} + b_c)
+\widetilde{C}_t = \tanh(W_{c} * x_t + b_c)
 \label{eq:ConvLSTM_input_modulation_gate}
 \end{equation}
 
 \begin{equation}
-C_t = f_t \circ C_{t-1} + i_t \circ \tanh(W_{xc} * X_t + W_{hc} * H_{t-1} + b_c)
-\label{eq:ConvLSTM_Cellstate_modification}
-\end{equation}
-
-\begin{equation}
-o_t = \sigma(W_{xo} * X_t + W_{ho} * H_{t-1} + W_{co} \circ C_{t} + b_o)
+o_t = \sigma(W_{o} * [x_t, h_{t-1}] + b_o)
 \label{eq:ConvLSTM_output_gate}
 \end{equation}
 
-\begin{equation}
-H_t = o_t * \tanh(C_t)
-\label{eq:ConvLSTM_output}
-\end{equation}
+I u ConvLSTM je možné se setkat s verzí obsahující špehýrková spojení.
+V tomto případě ale není stav buňky pouze konkatenován se vstupem a skrytým stavem před tím, než je na ně použita konvoluce.
+Místo toho je k nim přidán až po provedení této operace a místo konvoluce je svými vahami upraven pouze Hadamardovým součinem.
 
+Aby šel vstup, stav buňky a skrytý stav jednoduše konkatenovat, musí mít stejné prostorové rozměry.
+Z tohoto důvodu musí být velikost obrázků, které bude síť zpracovávat, známa předem, jelikož skryté stavy ConvLSTM buňky musí být inicializovány na správnou velikost.
 
-
-
-%f_t = \sigma(W_{xi) * X_t + W_{hi} * H_{t-1} + W_{ci} \circ C_{t-1} + b_i)
-
-
+Změnou velikosti konvoluční masky se dá měnit na jak rychle pohybující se objekty bude výsledná síť citlivá.
+Je jasné, že maska o velikosti 3x3 nebude efektivní pro zpracování objektu, který překoná během jediného snímku polovinu celého scény, která má na snímku stovky pixelů.
+Lidé se však moc rychle nepohybují a v případě, kdy jsou snímání kamerou se snímací frekvencí 30Hz, je tento pohyb o to menší. Síť ResNet, která je použita bezprostředně před ConvLSTM vrstvami navíc zmenšuje prostorové dimenze vstupních vektorů, tudíž v tomto případě je maska o velikosti 3x3 dostatečná.
+V navržené síti jsou proto použity 2 po sobě jdoucí ConvLSTM vrstvy s velikostí konvoluce 3x3, které následují po extrakci prostorových příznaků pomocí sítě ResNet.
 
 \endinput
