@@ -1,0 +1,23 @@
+\chapter{Navržené řešení}
+\label{sec:Propesed_solution}
+
+Velká většina výzkumných prací, které se počítáním lidí v obraze zabývají, se snaží jejich množství určit na základě jediného snímku.
+Toto je celkem logicky dáno jednodušší dostupností anotovaných datasetů, které jsou v případě, že se jedná pouze o jednotlivé snímky a ne videosekvence, mnohem obsáhlejší a zachycují větší množství nejrůznějších situací z rozličných úhlů pohledu.
+Temporální informace ale mohou být při počítání objektů v obraze velmi cennou informací, kterou by neuronová síť mohla využít pro snazší řešení situací, kdy jsou lidé v obraze zakryti jinými lidmi či objekty, a zlepšit tak přesnost výsledného počtu.
+Je totiž velmi nepravděpodobné, že člověk procházející zachycovanou scénou mezi dvěma po sobě jdoucími snímky zničehonic ze scény zmizí.
+Je samozřejmě možné, že tento člověk například zašel za roh, nebo byl zakryt kolem projíždějící dodávkou, ale pokud je stále alespoň trochu patrné, že se v obraze nachází a je překryt pouze částečně, tak by měl být do výsledného počtu rozhodně započítán. Pokud by taková situace byla vyhodnocována pouze na základě jediného snímku, tak by nepochybně bylo přesné spočítání lidí obtížné i pro člověka. Předchozí snímky přitom často obsahují informace, které by při rozhodování, zda se opravdu jedná o člověka, mohly výrazně pomoci.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=\textwidth]{Figures/solution/net_structure.pdf}
+	\caption{Struktura navržené sítě}
+	\label{fig:proposed_net}
+\end{figure}
+
+Neuronová sít navržená v této práci se tohoto snaží využít a jejím cílem je vytvořit ze vstupní sekvence \(n\) po sobě jdoucích snímků dvoudimenzionální hustotní mapu, která vyobrazuje hustotu výskytu lidí v posledním snímku vstupní sekvence, a z ní estimovat množství lidí v něm. Na obrázku \ref{fig:proposed_net} je vyobrazena struktura sítě navržené v této práci.
+Jak je z obrázku patrné, tak se skládá z několika částí, které budou v této kapitole blíže popsány.
+
+\input{Chapters/solution/resnet.tex}
+\input{Chapters/solution/convlstm.tex}
+
+\endinput

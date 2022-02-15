@@ -1,23 +1,23 @@
 \chapter{Historie}
 \label{sec:History}
 
-Ačkoliv jsou dnes na řešení problému počítání lidí v obraze hojně používány neuronové sítě, historie této disciplíny sahá do doby před nástupem jejich popularity.
+Ačkoliv jsou dnes pro řešení problému počítání lidí v obraze hojně používány neuronové sítě, historie této disciplíny sahá do doby před nárůstem jejich popularity.
 Obecně se tehdejší metody dají rozdělit do dvou kategorií a to na přímé (direct) a nepřímé (indirect).
 
 \begin{description}
 
-\item[Přímé metody] jsou založené na velice intuitivním přístupu k řešení tohoto problému a to, že jednotliví lidé jsou ve vstupním obraze zvlášť detekování a výsledný počet lidí v obraze je roven počtu těchto detekcí. Výkon a přesnost takovéhoto estimátoru jsou tedy silně závislé na výkonu použitého detektoru lidí.
-Od toho se také odvíjí nevýhody tohoto přístupu, kdy například v hustě zalidněných scénách často dochází k částečným zakrytím jednotlivých lidí jinými lidmi, či objekty, což dělá segmentaci obrazu a následnou detekci lidí v něm výrazně problematičtější.
+\item[Přímé metody] jsou založené na velice intuitivním přístupu k řešení tohoto problému, jímž je detekování jednotlivých lidí nacházejících se ve vstupním obraze. Výsledný počet lidí je u těchto metod roven počtu detekcí. Výkon a přesnost takovéhoto estimátoru jsou tedy silně závislé na výkonu použitého detektoru lidí.
+Od toho se také odvíjí nevýhody tohoto přístupu, kdy například v hustě zalidněných scénách často dochází k částečným zakrytím jednotlivých lidí jinými lidmi či objekty, což dělá segmentaci obrazu a následnou detekci lidí v něm výrazně problematičtější.
 
 Do této kategorie by se dal zařadit například estimátor popsaný v článku \cite{head_and_shoulders}.
-Vstupní obraz je nejdříve pomocí pomocí MID příznaků segmentován na popředí a pozadí.
-To znamená, že obraz je rozdělen do bloků dále rozdělených na buňky, pro které je vypočítána průměrná barva. Pokud se mezi dvěma po sobě jdoucími snímky v buňce průměrná barva změní více, než je hodnota stanoveného prahu, nachází se blok, ve kterém se nachází, v popředí.
+Vstupní obraz je nejdříve segmentován pomocí příznaků MID na popředí a pozadí.
+To znamená, že obraz je rozdělen na buňky seskupené do bloků, pro které je vypočítána průměrná barva. Pokud se mezi dvěma po sobě jdoucími snímky v buňce průměrná barva změní více, než jaká je hodnota stanoveného prahu, je blok, ve kterém se nachází, označen jako součást popředí.
 Autoři předpokládají, že lidé se v obraze mírně pohybují a proto bude možné tímto způsobem obraz segmentovat.
 V segmentovaném obraze jsou poté vyhledáni jednotliví lidé a následně je podle počtu detekcí stanoven jejich počet.
-Toho je docíleno pomocí detektoru založeného na metodě sliding window, kdy obsah detekčního okna je popsán příznaky HOG a o klasifikaci se stará klasifikátor AdaBoost \cite{AdaBoost}, který byl natrénovaný na obrázcích lidí obsahující jejich hlavy a ramena.
+Toho je docíleno pomocí detektoru založeného na metodě sliding window, kdy obsah detekčního okna je popsán příznaky HOG a o klasifikaci se stará klasifikátor AdaBoost \cite{AdaBoost}, jenž byl natrénován na obrázcích lidí obsahující jejich hlavy a ramena.
 
 Také by se tady dala zařadit práce \cite{YOLO_counting}, ve které autoři počítají osoby pomocí upravené neuronové sítě YOLO.
-Jejich úpravy této sítě spočívaly hlavně v rozdělení obrazu do více buněk a ve větším počtu bounding boxů počítaných pro každou buňku v obraze. Výslednou síť natrénovali tak, ať je citlivá na lidi.
+Jejich úpravy této sítě spočívaly hlavně v rozdělení obrazu do více buněk a zvýšení počtu bounding boxů počítaných pro každou buňku v obraze. Výslednou síť natrénovali tak, ať je citlivá na lidi.
 Počet lidí v obraze byl stanoven jako počet bounding boxů, které se nacházely v oblasti, kterou v obraze vytyčili.
 Autoři totiž systém zamýšleli pro použití na počítání lidí vycházejících z eskalátoru nebo na jiných místech, kde si mohli být jisti, že lidé budou procházet úzkým prostorem, který bude blízko kamery snímající scénu, takže jednotliví lidé budou v obraze v okamžiku započítání celkem dobře separováni a budou zabírat velké procento scény.
 U scén, kde toto není možné by ale nejspíš tento přístup narážel na stejné problémy, jako jiné přímé metody.
@@ -48,11 +48,11 @@ S narůstající popularitou neuronových sítí v oblasti strojového vidění 
 S nimi se objevila i nová a dnes velmi často používaná kategorie metod pro počítání objektů v obraze, kterou je počítání lidí pomocí hustotní mapy (Density Map Estimation).
 
 \begin{description}
-\item[Density Map Estimation] se vyznačuje tím, že konvoluční neuronová síť se na základě vstupního obrazu vytvoří hustotní mapu, která popisuje odhadovanou hustotu davu v obraze, a výsledný počet lidí v obraze je stanoven na základě této mapy.
+\item[Density Map Estimation] se vyznačuje tím, že konvoluční neuronová síť na základě vstupního obrazu vytvoří hustotní mapu, která popisuje odhadovanou hustotu davu v obraze, a výsledný počet lidí je stanoven na základě této mapy.
 
 Jednoduchý příklad, jak takovou hustotní mapu vytvořit je uveden v \cite{DeepCorn, Boominathan}.
 V trénovacím datasetu jsou označeny místa, kde se nachází jednotlivé hlavy lidí v obrázku.
-Formálně by se to dalo vyjádřit pomocí pole Diracových impulsů.
+Formálně by se tyto pozice daly vyjádřit pomocí pole Diracových impulsů.
 
 \begin{equation}
 H(x) = \sum_{i=1}^{M} \delta(x-x_i)
@@ -64,7 +64,7 @@ Pro každý takovýto bod je do hustotní mapy vložena normalizovaná Gaussova 
 V ideálním případě by byla hodnota \(\sigma\) pro každý bod odvozena od velikosti patřičné hlavy.
 Dostupné datasety ale tuto informaci velmi často nemají a pro každou hlavu je známa pouze její pozice.
 Parametr \(\sigma\) je z toho důvodu často konstantní napříč celou hustotní mapou.
-Hodnota každého bodu hustotní mapy je následně získána jako suma všech gausiánů v daném bodě.
+Hodnota každého bodu hustotní mapy je následně získána jako suma hodnot všech gausiánů v daném bodě.
 
 \begin{equation}
 D(x) = H(x) * G_{\sigma}(x)
@@ -85,10 +85,10 @@ Mezi sítě využívající tento přístup se řadí například M-SFANet \cite
 Obraz je dán na vstup sítě VGG-16bn \cite{VGG}, která slouží k získání příznaků.
 Následně je síť rozdělena na dvě části.
 Výstup z desáté vrstvy VGG je dán na vstup modulu CAN (Context-aware module) \cite{CAN_1, CAN_2}, který slouží z získání "scale-aware" příznaků a učí se jejich význam na základě jeho polohy v obraze, což pomáhá, je-li velikost lidí ve vstupním obraze výrazně ovlivněna perspektivou.
-Výstup z třinácté vrstvy je vložen na vstup ASPP \cite{ASPP} (Atrous spatial pyramid pooling) modulu, který podobně jako CAN slouží k extrakci "multi scale" příznaků, avšak narozdíl od CAN je důležitost jednotlivých napříč celým obrazem stejná.
+Výstup z třinácté vrstvy VGG je vložen na vstup ASPP \cite{ASPP} (Atrous spatial pyramid pooling) modulu, který podobně jako CAN slouží k extrakci "multi scale" příznaků, avšak narozdíl od CAN je jejich důležitost napříč celým obrazem stejná.
 Výstupy z těchto modulů jsou vloženy do dvou dekodérů, které slouží vytvoření hustotní a pozornostní mapy (attention map).
 Hustotní mapa je vytvořena stejně, jako již výše popsaná, a pozornostní mapa je vytvořena tak, že je-li hodnota v hustotní mapě hodnota větší, než práh, který je stanovený na hodnotu 0,001, tak je hodnota v pozornostní mapě rovna 1, jinak je hodnota rovna 0.
-Hadamardův součin těchto map je následně použit jako ground truth pro trénování této sítě.
+Výsledná hustotní mapa je rovna Hadamardově součinu těchto dvou map.
 
 \begin{figure}[h!]
 	\centering

@@ -1,59 +1,8 @@
-\chapter{Navržené řešení}
-\label{sec:Propesed_solution}
-
-Velká většina výzkumných prací, které se počítáním lidí v obraze zabývají, se snaží jejich množství určit na základě jediného snímku.
-Toto je celkem logicky dáno jednodušší dostupností anotovaných datasetů, které jsou v případě, že se jedná pouze o jednotlivé snímky a ne videosekvence, mnohem obsáhlejší a zachycují mnohem větší množství nejrůznějších situací z mnoha úhlů pohledu.
-Temporální informace ale mohou být při počítání objektů v obraze velmi cennou informací, kterou by neuronová síť mohla využít pro snazší řešení situací, kdy jsou lidé v obraze zakryti jinými lidmi či objekty, a zlepšit tak přesnost výsledného počtu.
-Je totiž velmi nepravděpodobné, že člověk procházející zachycovanou scénou mezi dvěma po sobě jdoucími snímky zničehonic ze scény zmizí.
-Je samozřejmě možné, že tento člověk například zašel za roh, nebo byl zakryt kolem projíždějící dodávkou, ale pokud je stále alespoň trochu patrné, že se v obraze nachází a je překryt pouze částečně, tak by měl být do výsledného počtu rozhodně započítán. Pokud by taková situace byla vyhodnocována pouze na základě jediného snímku, tak by nepochybně bylo přesné spočítání lidí obtížné i pro člověka. Předchozí snímky přitom často obsahují informace, které by při rozhodování, zda se opravdu jedná o člověka, mohly výrazně pomoci.
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=\textwidth]{Figures/solution/net_structure.pdf}
-	\caption{Struktura navržené sítě}
-	\label{fig:proposed_net}
-\end{figure}
-
-Neuronová sít navržená v této práci se tohoto snaží využít a jejím cílem je vytvořit ze vstupní sekvence \(n\) po sobě jdoucích snímků vytvořit dvoudimenzionální hustotní mapu, která vyobrazuje hustotu výskytu lidí v posledním snímku vstupní sekvence, a suma jejíž pixelů bude rovna celkovému počtu lidí v něm. Na obrázku \ref{fig:proposed_net} je vyobrazena struktura stíě navržené v této práci.
-Jak je z obrázku patrné, tak se skládá z několika částí, které budou v této kapitole blíže popsány.
-
-\section{ResNet}
-Residuální neuronová síť (ResNet) \cite{ResNet} byla poprvé představena v roce 2015, kdy vyhrála ImageNet Large Scale Visual Recognition Challenge, a svou architekturou silně ovlivnila budoucnost návrhu neuronových sítí.
-Síla této neuronové sítě spočívá v tom, že přináší způsob, jak snížit vliv tzv. problému mizejícího gradientu (vanishing gradient problem).
-Komplexita neuronových sítí se s každým rokem zvyšuje. Nejvíce se ale konvoluční neuronové sítě rozrůstají do hloubky. Čím je totiž neuronová síť hlubší, tím komplexnější příznaky dokáže extrahovat z původního vstupu a tím složitější funkce dokáže aproximovat.
-Čím je ale neuronová síť hlubší, tím více se projevuje problém mizejícího gradientu.
-Když je při trénování sítí šířena chyba pomocí algoritmu backpropagation, dochází k tomu, že její vliv je na svrchních vrstvách menší, než na hlubokých. Je-li tedy síť příliš hluboká, tak gradient je na svrchních vrstvách tak malý, že nedochází k přenastavení vah a tyto vrstvy se tedy nijak nemění.
-Prohloubení sítě tedy v tomto případě ztrácí smysl a dokonce může mít negativní vliv na její výsledky.
-Mělčí neuronové sítě proto mohou při řešení stejného problému dosáhnout mnohem lepších výsledků.
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=0.7\textwidth]{Figures/solution/vanishing_gradient.png}
-	\caption{Porovnání chyby při testování a trénování dvou sítí o hloubce 20 a 56 vrstev určených ke klasifikaci na datasetu CIFAR-10 \cite{ResNet}}
-\end{figure}
-
-Síť ResNet je tvořena reziduálními bloky, které jsou podobné VGG blokům \cite{VGG}.
-Každý blok obsahuje dvě konvoluce o velikosti 3x3 a každá konvoluce je následovaná normalizací dávky (batch normalization) a aktivační funkcí ReLU.
-Co ale reziduální blok přidává je tzv. zkratkové spojení (shortcut connection), které právě pomáhá snižovat vliv mizejícího gradientu.
-Zkratkové spojení vezme vstupní hodnoty reziduálního bloku a přidá je k hodnotám před spuštěním druhé aktivační funkce.
-V praxi to znamená, že vstupní hodnoty prochází v bloku dvěma cestami, kdy v jedné jsou změněny dvěma konvolucemi, zatímco v druhé se těmto konvolucím vyhnou. Při zpětném šíření chyby sítí se tedy chyba dostane do horních vrstev mnohem rychleji, takže navrhovaná síť může být mnohem hlubší.
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=0.3\textwidth]{Figures/solution/residual_block.pdf}
-	\caption{struktura reziduálního bloku}
-	\label{fig:residual_block}
-\end{figure}
-
-Síť ResNet je v navržené síti použita hned na vstupu a jejím cílem je zredukovat dimenzi vstupní sekvence po sobě jdoucích snímků a extrahovat z jednotlivých snímků důležité příznaky, které následně budou využity pro extrakci temporálních informací a konstrukci výsledné hustotní mapy.
-Konkrétně je použita síť ResNet18, která obsahuje pouze čtyři reziduální bloky.
-Tato varianta byla zvolena kvůli omezenému množství paměti na testovacím stroji.
-
 \section{ConvLSTM}
 Tradiční konvoluční neuronové sítě jsou výborným nástrojem pro zjišťování a práci s příznaky v prostorové doméně. Pokud je ale potřeba kromě prostorových dat nutné pracovat i s temporálními informacemi, musíme použít jiný nástroj. V takovém případě se nabízí použití ConvLSTM (Convolutional Long Short-Term Memory) sítě. Ta byla poprvé představena v roce 2015 v článku \cite{ConvLSTM}. Pro pochopení, jak ConvLSTM funguje, je ale nejdříve důležité pochopit, na jakém principu funguje tradiční LSTM síť, na které je ConvLSTM založená.
 
 LSTM patří do skupiny rekurentních neuronových sítí (RNN), které slouží ke zpracování sekvenčních dat, kde existuje závislost aktuálního vstupu na předchozím.
-Problémem použití klasických neuronový sítí na taková data je, že neuronová síť řeší každý vstup zvlášť a nemá žádný mechanismus, pomocí kterého by si dokázal spojit předchozí vstupy s těmi aktuálními.
+Problémem použití klasických neuronový sítí na taková data je, že neuronová síť řeší každý vstup zvlášť a nemá žádný mechanismus, pomocí kterého by si dokázala spojit předchozí vstupy s těmi aktuálními.
 Samozřejmě by se nabízela možnost dát na vstup neuronové sítě celou vstupní sekvenci, nebo alespoň její část, která se nachází bezprostředně před aktuálním vstupem, avšak to by znamenalo, že výsledná neuronová síť by musela být mnohem komplexnější, což by znamenalo větší nároky na výpočetní sílu a velikost trénovací množiny.
 Rekurentní neuronové sítě tento problém řeší tím, že přidávají stavové proměnné, které ukládají informace o předchozích vstupech a jsou zpracovávány společně s aktuálním vstupem.
 
@@ -129,12 +78,11 @@ C_t = f_t * C_{t-1} + i_t * \widetilde{C}_t
 \end{equation}
 
 
-
 \item Zbývá ještě poslední krok, a tím je vytvoření skrytého stavu buňky, který je zároveň i jejím výstupem.
 Ten je vytvořen ze stavu buňky, avšak předtím, než jsou data dána na výstup jsou modifikována FC vrstvou s aktivační funkcí \(\tanh\).
 Následně je ještě rozhodnuto, jaká data jsou na výstup propuštěna a v jaké míře.
 K tomuto účelu slouží výstupní brána (Output gate), která je opět tvořena FC vrstvou se sigmoidální aktivační funkcí.
-Na vstupu tato brána bere vstupní data společně se skrytým stavem a jejich základě rozhodne o tom, jaké informace ze stavu buňky budou propuštěny dále.
+Na vstupu tato brána bere vstupní data společně se skrytým stavem a na jejich základě rozhodne o tom, jaké informace ze stavu buňky budou propuštěny dále.
 
 \begin{equation}
 o_t = \sigma(W_o \cdot [h_{t-1}, x_t] + b_o)
@@ -148,11 +96,57 @@ h_t = o_t * \tanh(C_t)
 \label{eq:output}
 \end{equation}
 
-
-
-
 \end{enumerate}
 
+
+Konvoluční LSTM vrstvy ConvLSTM spojují výhody konvolučních vrstev, které jsou skvělé pro zpracování prostorových informací a LSTM vrstev, které dobře zpracovávají temporální informace, a proto jsou jedním z nástrojů, které je možné použít pro práci s časoprostorovými daty.
+
+Stejně jako u tradiční konvoluční vrstvy jsou i u vrstvy ConvLSTM vstupem a výstupem matice.
+Co ale u tradiční konvoluční vrstvy chybí je nějaký mechanismus pro ukládání stavů.
+To je u ConvLSTM realizováno pomocí další matice, která je předávána mezi jednotlivými vstupy. Velikost této matice musí být známa ve chvíli konstrukce sítě a je stejná napříč celým výpočtem.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=\textwidth]{Figures/solution/ConvLSTM_schema.pdf}
+	\caption{Struktura ConvLSTM}
+	\label{fig:LSTM_architecture}
+\end{figure}
+
+
+\begin{equation}
+f_t = \sigma(W_{xf} * X_t + W_{hf} * H_{t-1} + W_{cf} \circ C_{t-1} + b_f)
+\label{eq:ConvLSTM_forget_gate}
+\end{equation}
+
+\begin{equation}
+i_t = \sigma(W_{xi} * X_t + W_{hi} * H_{t-1} + W_{ci} \circ C_{t-1} + b_i)
+\label{eq:ConvLSTM_ipnut_gate}
+\end{equation}
+
+\begin{equation}
+\widetilde{C}_t = \tanh(W_{xc} * X_t + W_{hc} * H_{t-1} + b_c)
+\label{eq:ConvLSTM_input_modulation_gate}
+\end{equation}
+
+\begin{equation}
+C_t = f_t \circ C_{t-1} + i_t \circ \tanh(W_{xc} * X_t + W_{hc} * H_{t-1} + b_c)
+\label{eq:ConvLSTM_Cellstate_modification}
+\end{equation}
+
+\begin{equation}
+o_t = \sigma(W_{xo} * X_t + W_{ho} * H_{t-1} + W_{co} \circ C_{t} + b_o)
+\label{eq:ConvLSTM_output_gate}
+\end{equation}
+
+\begin{equation}
+H_t = o_t * \tanh(C_t)
+\label{eq:ConvLSTM_output}
+\end{equation}
+
+
+
+
+%f_t = \sigma(W_{xi) * X_t + W_{hi} * H_{t-1} + W_{ci} \circ C_{t-1} + b_i)
 
 
 
