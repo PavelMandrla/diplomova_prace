@@ -1,4 +1,3 @@
-./build
-./sources
-./cmake-build-debug
-./.idea
+testing/
+datasets/
+save_dir/

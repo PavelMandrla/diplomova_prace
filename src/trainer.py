@@ -20,6 +20,7 @@ class Trainer(object):
         self.dataloader = DataLoader(dataset=dataset, batch_size=1, shuffle=True, num_workers=1)
 
         self.model = MyModel(sequence_len=args.sequence_length, stride=args.stride)
+        #self.model = MyModel('../save_dir/m4/30_ckpt.tar')
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -97,6 +98,7 @@ class Trainer(object):
                 #endregion
 
         t.set_postfix(avg_epoch_loss = epoch_loss.avg)
+        print(epoch_loss.avg)
 
     def get_OT_loss(self, outputs, outputs_normed, points):
         ot_loss, wd, ot_obj_value = self.ot_loss(outputs_normed, outputs, points)

@@ -170,7 +170,7 @@ def sinkhorn_knopp(a, b, C, reg=1e-1, maxIter=1000, stopThr=1e-9,
 
     while (err > stopThr and it <= maxIter):
         upre, vpre = u, v
-        KTu.resize_(0)  # TODO -> stops the warning msg, but is this correct??
+        #KTu.resize_(0)  # TODO -> stops the warning msg, but is this correct??
         torch.matmul(u, K, out=KTu)
         v = torch.div(b, KTu + M_EPS)
         torch.matmul(K, v, out=Kv)

@@ -191,20 +191,25 @@ def animate_video(model, device, src_path, save_path):
     out.release()
 
 
-
-def evaluate_dataset(model, dataloader, device):
+def evaluate_dataset(model, dataloader, device, filename):
     counts = []
+    times = []
+
     t = tqdm(dataloader, leave=False, total=len(dataloader))
     for i, data in enumerate(t):
         image = data[0]
         real_count = data[1].size()[1]
 
+        start = timer()
         image = image.to(device)
         with torch.set_grad_enabled(False):
             mu, mu_normed = model(image)
+        end = timer()
+        times.append(end - start)
 
         counts.append((torch.sum(mu).item(), real_count))
 
-    with open('counts5_3.csv', 'w+') as file:
-        for count in counts:
-            file.write('%.3f, %.3f\n' % (count[1], count[0]))
+    with open(filename, 'w+') as file:
+        for i, count in enumerate(counts):
+            file.write('%f, %f, %f\n' % (count[1], count[0], times[i]))
+

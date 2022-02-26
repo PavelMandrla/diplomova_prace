@@ -1,0 +1,7 @@
+!Master.tex
+!Master.pdf
+Master.*
+*.log
+/Chapters/*.log
+/Chapters/*/*.log
+pdfa.xmpi

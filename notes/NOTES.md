@@ -169,3 +169,55 @@
 - _casual convolution_ - výstup je závislý pouze na předcházejících vstupech
 
 ### [Implementace TCN + nějaké porovnání](https://github.com/locuslab/TCN)
+
+### DM-Count
+- __Optimal tranport__
+  - optimální cena tranformování jedné distribuce na druhou
+    - máme hromadu sněhu, chceme z ní udělat jinou hromadu sněhu, jaké je nejmenší množství práce, které na to budeme potřebovat
+  - OT cost - slouží pro kvantifikování podobnosti dvou pravděpodobnostních distribucí
+- počítání lidí v obraze je distribution matching problémy
+  - jejich síť vrátí hustotní mapu, kterou-li zesumujeme, dostaneme počet lidí
+  - nepoužívají ale gaussiány
+  - metoda DM-Count je agnostická vůči architektuře sítě
+  - pro vytvoření GT mapy nepotřebuje gaussiány
+- __Loss funkce__
+  - _z_ - vektorizovaná bininární mapa pozic hlav
+  - _ẑ_ - vektorizovaná predikovaná hustotní mapa
+  - sestavená ze tří částí
+  - ___Counting loss___
+    - měří rozdil mezi celkovými hmotnostmi
+    - ![Counting loss](./note_pics/counting_loss.png)
+    - chceme, aby absolutní hodnota rozdílů L1 norem _z_ a _ẑ_ byla co nejmenší
+      - ideální by bylo, kdyby _ẑ_ bylo ekvivalentem té binární mapy, ale jelikož se díváme poze na L1 normu, tak nám stačí, když obsah pod hustotní mapu se rovná obsahu té binární mapy
+        - jelikož je obsah pod binární mapou roven počtu lidí
+  - ___OT loss___
+    - měří rozdíl mezi distribucemi normalizovaných funkcí hustoty (density functions)
+    - ![OT loss](./note_pics/optimal_transport_loss.png)
+    - chceme, ať distribuce v _ẑ_ je co nejblíže binární mapě
+      - využijeme Optimal Transport
+      - α* a β* jsou řešením následujícího problému
+        - ![OT problem](./note_pics/OT_problem.png)
+          - (výpočet ceny Optimal Transport)
+      - využívá kvadratickou cenu transportu
+        - ![quadratic cost](./note_pics/quadratic_cost.png)
+          - _z(i)_ a _ẑ(j)_ jsou 2D souřadnice pozic _i_ a _j_
+      - z _lOT_ dokážeme udělat gradient - zderivujeme podle _ẑ_
+        - ![quadratic cost](./note_pics/OT_gradient.png)
+        - ten může být dále propagován do sítě pomocí Back propagation a dle něj se může síť naučit parametry pro odhadování hustoty
+  - ___Total variation loss___
+    - měří rozdíl mezi distribucemi normalizovaných funkcí hustoty (density functions
+      - pro aproximaci α* a β* je použit sinkhornův algoritmus
+        - něco o hledání min max sedlového bodu v matici
+        - ze začátku konverguje rychle, ale pak se spomaluje
+          - po omezeném množství iterací bude hustotní mapa blízko, ale ne úplně identická
+      - tento přístup je dobrý pro husté davy, ale nefunguje tak dobře pro řídčejí populované oblasti ve scéně
+        - Total variation loss řeší tento problém
+        - ![total variation loss](./note_pics/TV_loss.png)
+        - zároveň zlepšuje stabilitu ???
+      - z toho můžeme vypočítat gradient, který může být backpropagován
+        - ![total variation loss gradient](./note_pics/tv_loss_gradient.png)
+        - ![total variation loss gradient V](./note_pics/tv_loss_v.png)
+  - ___Celková loss funkce___
+    - je kombinací _Counting loss_, _OT loss_ a _TV loss_
+    - ![total loss](./note_pics/total_loss.png)
+    - ![total loss](./note_pics/min_problem.png)
