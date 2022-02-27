@@ -106,7 +106,7 @@ Vzorce \ref{eq:forget_gate} a \ref{eq:input_gate} by tedy šly v tomto případ�
 
 Konvoluční LSTM vrstvy ConvLSTM spojují výhody konvolučních vrstev, které jsou skvělé pro zpracování prostorových informací a LSTM vrstev, které dobře zpracovávají temporální informace, a proto jsou jedním z nástrojů, které je možné použít pro práci s časoprostorovými daty.
 
-Na rozdíl od klasické LSTM vrstvy rozhoduje ConvLSTM o novém stavu buňky na základě jejího vstupu a jejích skrytých stav a také na základě vstupů a skrytých stavů jejích sousedů.
+Na rozdíl od klasické LSTM vrstvy rozhoduje ConvLSTM o novém stavu buňky nejen na základě jejího vstupu a jejích skrytých stav a také na základě vstupů a skrytých stavů jejích sousedů.
 Vstupy, výstupy a skryté stavy jsou z tohoto důvodu u ConvLSTM reprezentovány pomocí 3D tenzorů, jejichž poslední dvě dimenze jsou dimenze prostorové.
 Na tyto tenzor jsou následně použity konvoluční operace pro výpočet nového stavu buňky a skrytého stavu. Ekvivalenty vzorců popisujících jednotlivé brány v LSTM tedy vypadají následovně.
 
@@ -141,5 +141,6 @@ Změnou velikosti konvoluční masky se dá měnit na jak rychle pohybující se
 Je jasné, že maska o velikosti 3x3 nebude efektivní pro zpracování objektu, který překoná během jediného snímku polovinu celého scény, která má na snímku stovky pixelů.
 Lidé se však moc rychle nepohybují a v případě, kdy jsou snímání kamerou se snímací frekvencí 30Hz, je tento pohyb o to menší. Síť ResNet, která je použita bezprostředně před ConvLSTM vrstvami navíc zmenšuje prostorové dimenze vstupních vektorů, tudíž v tomto případě je maska o velikosti 3x3 dostatečná.
 V navržené síti jsou proto použity 2 po sobě jdoucí ConvLSTM vrstvy s velikostí konvoluce 3x3, které následují po extrakci prostorových příznaků pomocí sítě ResNet.
+Dvě vrstvy jsou použity z toho důvodu, že v případě, že je v síti použito více ConvLSTM vrtstev, je taková síť schopná ze vstupní sekvence extrahovat složitější časoprostorové příznaky.
 
 \endinput

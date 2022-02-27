@@ -1,0 +1,29 @@
+\chapter{Dostupné datasety}
+\label{sec:Datasets}
+Před použitím konvoluční neuronové neuronové sítě navržené v této práci je nutné, aby byly váhy jednotlivých konvolucí správně nastaveny.
+K tomuto účelu slouží tzv. trénovací množina.
+Jedná se o množinu příkladů situací, na které může neuronová síť při svém fungování narazit.
+V tomto případě, jelikož cílem sítě je určit počet lidí ve videosekvenci, se jedná o obrazy, resp. sekvenci po sobě jdoucích snímků.
+Kromě samotných snímků potřebuje ještě síť základní pravdu, což je informace, pomocí které dokáže určit, jak moc se při svých predikcích mýlí, aby na základě této chyby mohla přenastavit své váhy, čímž tuto chybu sníží a posune se blíže optimu.
+Tento typ strojového učení, kdy je pro natrénování modelu použita oanotovaná trénovací sada, se nazývá učení s učitelem.
+
+Jelikož při samotném používání neuronové sítě již nedochází k žádnému přenastavování jejích vah, je pro zajištění jejího dobrého fungování naprosto stěžejní, aby byla trénovací množina rozsáhlá a co nejvíce různorodá.
+Pokud je například síť natrénovaná pouze na snímcích získaných během dne, tak není zaručeno, že síť bude dosahovat stejně dobrých výsledků i na nočních záběrech.
+Stejně tak model, natrénovaný na záběrech z bezpečnostních kamer, které jsou většinou umístěny vysoko nad lidskými hlavami, může mít problémy se záběry lidí pořízenými kamerou ve výšce očí.
+
+Jelikož počítání lidí v obraze je mezi výzkumníky celkem populární problém, existuje k němu celá řada obsáhlých datasetů, z nichž jsou blíže některé popsány v této kapitole.
+Mezi jednotlivými datasety ale mohou být veliké rozdíly.
+To může být způsobeno například tím, kde má být daný estimátor nasazen, což bude určovat, jaké typy snímků bude dataset obsahovat.
+Například datasety VisDrone \cite{VisDrone-Dataset-1, VisDrone-Dataset-2}, slouží k učení detekce, sledování a počítání objektů a lidí v obrazech a videích pořízených z dronu.
+
+
+
+
+
+\section{UCF-QNRF}
+
+\section{ShanghaiTech}
+
+\section{Fudan-ShanghaiTech}
+
+\endinput
