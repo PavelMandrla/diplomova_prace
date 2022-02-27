@@ -6,7 +6,7 @@ from losses.ot_loss import OT_Loss
 from utils import AverageMeter
 from models.model import MyModel
 from torch.utils.data import DataLoader
-from datasets.fdst import FDST
+from datasets import FDST, VisDrone2020
 from tqdm import tqdm
 
 
@@ -16,11 +16,17 @@ class Trainer(object):
         self.args = args
 
         self.save_dir = self.get_save_dir()
-        dataset = FDST(args.dataset_path, training=True, sequence_len=args.sequence_length, stride=args.stride)
+        # dataset = FDST(args.dataset_path, training=True, sequence_len=args.sequence_length, stride=args.stride)
+        dataset = VisDrone2020(
+            args.dataset_path,
+            training=True,
+            sequence_len=args.sequence_length,
+            stride=args.stride)
+
         self.dataloader = DataLoader(dataset=dataset, batch_size=1, shuffle=True, num_workers=1)
 
         self.model = MyModel(sequence_len=args.sequence_length, stride=args.stride)
-        #self.model = MyModel('../save_dir/m4/30_ckpt.tar')
+        #self.model = MyModel('./trained_models/VisDrone/len3_stride3.tar')
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)

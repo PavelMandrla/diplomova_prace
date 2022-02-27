@@ -65,7 +65,7 @@ class VisDrone2020(SequentialDataset):
                 if i > len(result):
                     result.append([])
                 result[i - 1].append((x, y))
-        return np.array(result)
+        return result
 
 
 

@@ -13,7 +13,7 @@ from testing.utils import *
 dataset_path = '../datasets/VisDrone2020-CC'
 input_size = (1920, 1080)
 
-model_path = './trained_models/len5_stride3.tar'
+model_path = './trained_models/VisDrone/len3_stride3.tar'
 model = MyModel(model_path, input_size=input_size)
 
 # dataset = FDST(
