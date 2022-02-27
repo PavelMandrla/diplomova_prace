@@ -3,15 +3,10 @@
 
 import os
 import torch
-import random
 import json
 from glob import glob
-from torch.utils.data import Dataset
-from torchvision import transforms
-from PIL import Image
-import torchvision.transforms.functional as F
 import numpy as np
-from .sequentialDataset import SequentialDataset
+from datasets import SequentialDataset
 
 
 def gen_discrete_map(im_height, im_width, points):

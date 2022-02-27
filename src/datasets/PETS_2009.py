@@ -1,6 +1,6 @@
 import os
 import re
-from .sequentialDataset import SequentialDataset
+from datasets import SequentialDataset
 from glob import glob
 import xml.etree.ElementTree as ET
 import numpy as np
