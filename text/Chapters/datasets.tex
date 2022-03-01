@@ -25,10 +25,10 @@ Oproti tomu snímky datasetu ShanghaiTechRGBD \cite{ShanghaiTechRGBD-1, Shanghai
 	\subfloat[]{\includegraphics[height=3.5cm]{Figures/datasets/UCF-QNRF/img_0222.jpg}}
 	\subfloat[]{\includegraphics[height=3.5cm]{Figures/datasets/UCF-QNRF/img_0330.jpg}}
 	\caption{Ukázka snímků obsažených v datasetu UCF-QNRF \cite{QNRF}}
-	\label{fig:RNN_architecture}
+	\label{fig:QNRF}
 \end{figure}
 
-Dataset QNRF \cite{QNRF} z Kalifornské univerzity je jedním z nejpopulárnějších datasetů používaných pro trénování a validaci metod strojového učení počítajících lidi v obraze.
+Dataset QNRF \cite{QNRF} z Univerzity střední Floridy (University of Central Florida) je jedním z nejpopulárnějších datasetů používaných pro trénování a validaci metod strojového učení počítajících lidi v obraze.
 Je totiž jedním z nejrozsáhlejších datasetů, které jsou v současnosti volně dostupné.
 Celkem obsahuje 1535 na sobě nezávislých snímků získaných z internetu.
 Tyto snímky jsou rozděleny na trénovací množinu obsahující 1201 snímků a testovací množinu s 334 snímky.
@@ -54,22 +54,108 @@ Stjeně jako v UCF-QNRF je i zde každá osoba označena pouze jediným bodem, k
 	\subfloat[]{\includegraphics[height=3.5cm]{Figures/datasets/ShanghaiTech/IMG_272.jpg}}
 	\subfloat[]{\includegraphics[height=3.5cm]{Figures/datasets/ShanghaiTech/IMG_115.jpg}}
 	\caption{Ukázka snímků obsažených v datasetu ShanghaiTech \cite{ShanghaiTech}}
-	\label{fig:RNN_architecture}
+	\label{fig:SH_TECH}
 \end{figure}
 
 
 \section{Fudan-ShanghaiTech}
+Převážná většina dostupných datasetů obsahuje pouze jednotlivé snímky a datasety, které obsahují videosekvence nebývají tak obsáhlé a rozmanité.
 
-\begin{table}[]
-\begin{tabular}{|l|l|l|l|}
+Příčinou tohoto je náročnost anotování obrazů, která nejde automatizovat a musí být proto prováděna manuálně.
+Při anotování snímku musí osoba, která pro snímek vytváří základní pravdu, najít všechny lidi, kteří se v obraze nacházejí a označit jejich polohu, což je zdlouhavá činnost.
+Z tohoto důvodu také datasety jako ShanghaiTech nebo UCF-QNRF používají pro označení pozic osob pouze body ve středu hlav místo obdélníků, které by vymezovaly hranice hlav, či jednotlivých osob.
+Označit bod je zkrátka rychlejší, než vymezit hranice obdélníka a osoba vytvářející anotace pro obraz tak dokáže rychleji vytvořit obsáhlejší dataset.
+
+Při anotování videí navíc přibývá problém, že pro vytvoření jediného vzorku nestačí označit lidi v jednom obraze, ale v celé sekvenci.
+Pokud například estimátor počítá lidi na základě pěti po sobě jdoucích snímků, tak, aby výsledný dataset měl stejný počet položek, jako dataset obsahující pouze jednotlivé snímky, musí anotátor popsat pětkrát více snímků.
+
+\begin{figure}[h!]
+	\centering
+	\subfloat[]{\includegraphics[width=0.45\textwidth]{Figures/datasets/FDST/015.jpg}}
+	\subfloat[]{\includegraphics[width=0.45\textwidth]{Figures/datasets/FDST/150.jpg}}
+	\caption{Ukázka snímků obsažených v datasetu Fudan-ShanghaiTech \cite{ShanghaiTech}}
+	\label{fig:FDST}
+\end{figure}
+
+
+Jedním z datasetů, který se zaměřuje na videosekvence místo samostatných fotografií je Fudan-ShanghaiTech \cite{fdst_dataset}, který je tvořen videi v rozlišení 2,1 megapixelů.
+Teto dataset sice celkem obsahuje 15 000 snímků, čímž do velikosti překonává UCF-QNRF, avšak je důležité zmínit, že tyto snímky jsou součástí 100 videí, které byly natočeny ve 13 různých scénách.
+Rozmanitost situací, prostředí a světelných podmínek proto není tak velká, jako datasetů obsahujících fotografie.
+Průměrný počet lidí na snímcích je oproti UCF-QNRF a ShanghaiTech o řád nižší. Místo stovek se zde v průměru nachází 23 lidí na jeden snímek.
+Nejsou zde proto zachyceny tak husté davy a lidé jsou mnohem více separováni.
+Snímky jsou anotovány pomocí obdélníků, které udávají pozice a rozměry jednotlivých hlav.
+
+\section{GTA5 Crowd Counting Dataset}
+Jak již bylo v této kapitole popsáno, sbírání a anotování rozsáhlých rozmanitých datasetů pořízených v reálném světě je časově velmi náročná činnost.
+Nabízí se však ale i jiná možnost, jak vytvořit velmi rozsáhlou datovou množinu ve které známe přesnou polohu každé osoby aniž by ji musel anotátor v obraze manuálně najít.
+Touto možností je použití syntetických datasetů.
+Takovéto datasety neobsahují data z reálného světa, ale fabrikovaná data, která se co možná nejblíže podobají reálným.
+
+V současnosti je počítačová grafika dostatečně pokročilá na to, aby dokázala vykreslit fotorealistickou reprezentaci scény, čehož může být využito právě pro tvorbu daného datasetu.
+Jelikož taková scéna je vykreslována počítačem, známe nejen souřadnice každého člověka ve scéně, ale přesně víme, jeho postoj či jak moc je v obraze vidět a které části nejsou zakryty, díky čemuž je možné vytvořit velmi přesnou základní pravdu, a to bez použití anotátora.
+
+To ale neznamená, že pro vytvoření takového datasetu není potřeba velké množství lidská práce.
+Generátor datasetu totiž musí být schopen simulovat podmínky, ve kterých má trénovaný estimátor pracovat.
+Proto, pokud je například cílem, aby estimátor pracoval ve venkovních podmínkách celý rok v každou denní hodinu, musí být schopen generátor datasetu obsahovat simulaci počasí a denního cyklu, což do něj musí někdo naimplementovat.
+V datasetu by také měly být obsaženy různé aktivity, které lidé normálně dělají.
+Bude-li totiž obsahovat pouze stroze stojící lidi, nejspíše bude mít problémy ve chvíli, kdy narazí na situaci, kdy se ve scéně někdo posadí, nebo začne běhat.
+Generátor proto musí obsahovat celou řadu animací, které musí vytvořit a přidat do scény, nebo vytvořit nějaký systém behaviorální simulace.
+Dále je podstatné i prostředí scény, do které jsou lidé vloženi.
+Při použití identické scény napříč celým datasetem, může docházet k overfittingu, ke kterému by mohlo dojít i v případě, že v použitých modelech lidí není dostatek variace.
+Neuronová síť by si příliš navykla na vzory v datech, které se neustále opakují, což by ve výsledku vedlo ke zhoršení výkonu estimátoru při reálném nasazení.
+Jak je z tohoto patrné, vytvoření generátoru syntetického datasetu vyžaduje mnoho člověkohodin práce vysoce kvalifikovaných pracovníků, jako jsou programátoroři a výtvarníci.
+Vytvoření takového generátoru datasetu je proto mnohem náročnější jak na lidský, tak i na finanční kapitál.
+
+Existuje však mnoho softwarových děl, které řadu z těchto požadavků splňují.
+V mnoha počítačových hrách se hráči pohybují v prostředích modelovaných podle reálného světa obklopeni mnoha rozličnými nehratelnými postavami.
+Například ve hrách série Hitman \cite{hitman} od vývojáře IO Interactive prochází hráč mnoha úrovněmi, které jsou plné simulovaných davů čítajících stovek postav.
+Aby měl hráč pocit, že simulovaný svět, ve kterém se nachází je reálný, mají tyto postavy řadu činností, které provádějí a které jsou animovány.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\textwidth]{Figures/datasets/GCC/Hitman_crowd.png}
+	\caption{Ukázka davu ve hře Hitman (2016) (převzato z \cite{ign_2017})}
+	\label{fig:RNN_architecture}
+\end{figure}
+
+
+Moderní počítačové hry jsou proto slibným zdrojem dat pro trénování neuronových sítí.
+Totu problematikou se zabývá i článek Learning from Synthetic Data for Crowd Counting in the Wild \cite{GCC_dataset}. 
+Pro účely této práce vytvořili autoři dataset GTA5 Crowd Counting Dataset (GCC), který využívá hry Grand Theft Auto V \cite{GTAV} pro vytvoření syntetických scén.
+Tato hra nabízí 252 čtverečních kilometrů terénu, simulaci počasí i denního a nočního cyklu a postavy mohou být oděny do mnoha různých druhů oblečení, mohou mít řadu účesů.
+Dataset proto může být velmi rozmanitý.
+
+Celkem dataset GCC sestává z 15 212 snímků pořízených ve 400 různých scénách za různých meteorologických a světelných podmínek a celkem obsahujících 7 625 843 osob.
+Každá osoba je ve snímku anotována pomocí bodu umístěného do středu její hlavy.
+
+\begin{figure}[h!]
+	\centering
+	\subfloat[]{\includegraphics[height=4cm]{Figures/datasets/GCC/GCC_1.png}}
+	\subfloat[]{\includegraphics[height=4cm]{Figures/datasets/GCC/GCC_2.jpg}}
+	\caption{Ukázka snímků obsažených v datasetu GCC \cite{GCC_dataset}}
+	\label{fig:QNRF}
+\end{figure}
+
+Při pohledu na snímky tohoto datasetu je ale očividné, že se jedná o uměle vykreslenou scénu.
+Autoři článku proto navrhují postup, jak vygenerovaný dataset upravit, aby se blíže podobal reálným datům.
+Tohoto dosahují pomocí neuronové sítě typu GAN (Generative adversarial network), jejímž cílem je syntetické obrazy upravit tak, aby se vzhledem více podobaly obrazům obsaženým v datasetech z reálného světa.
+Samotný estimátor je potom trénován až s pomocí takto upravených fotografií.
+
+
+
+
+
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|r|r|l|}
 \hline
                     & \begin{tabular}[c]{@{}l@{}}počet\\ snímků\end{tabular} & \begin{tabular}[c]{@{}l@{}}průměrný počet\\ lidí na snímku\end{tabular} & \begin{tabular}[c]{@{}l@{}}průměrné\\ rozlišení snímku {[}px{]}\end{tabular} \\ \hline
-UCF-QNRF            & 1535                                                   & 815                                                                     & 2013 * 2902                                                                  \\ \hline
+UCF-QNRF            & 1 535                                                   & 815                                                                     & 2013 * 2902                                                                  \\ \hline
 ShanghaiTech Part-A & 482                                                    & 501                                                                     & 589 * 868                                                                    \\ \hline
 ShanghaiTech Part-B & 716                                                    & 124                                                                     & 768 * 1024                                                                   \\ \hline
 Fudan-ShanghaiTech  & 15 000                                                 & 26                                                                      & 1080 * 1920                                                                  \\ \hline
 \end{tabular}
 \end{table}
-
 
 \endinput
