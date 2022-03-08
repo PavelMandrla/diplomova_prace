@@ -6,7 +6,7 @@ from losses.ot_loss import OT_Loss
 from utils import AverageMeter
 from models.model import MyModel
 from torch.utils.data import DataLoader
-from datasets import FDST, VisDrone2020
+from datasets import *
 from tqdm import tqdm
 
 
@@ -16,12 +16,13 @@ class Trainer(object):
         self.args = args
 
         self.save_dir = self.get_save_dir()
-        # dataset = FDST(args.dataset_path, training=True, sequence_len=args.sequence_length, stride=args.stride)
-        dataset = VisDrone2020(
-            args.dataset_path,
-            training=True,
-            sequence_len=args.sequence_length,
-            stride=args.stride)
+        dataset = FDST(args.dataset_path, training=True, sequence_len=args.sequence_length, stride=args.stride)
+        # dataset = VisDrone2020(
+        #     args.dataset_path,
+        #     training=True,
+        #     sequence_len=args.sequence_length,
+        #     stride=args.stride)
+        # dataset = QNRF(args.dataset_path, training=True)
 
         self.dataloader = DataLoader(dataset=dataset, batch_size=1, shuffle=True, num_workers=1)
 

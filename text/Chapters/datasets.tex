@@ -32,7 +32,7 @@ Dataset QNRF \cite{QNRF} z Univerzity střední Floridy (University of Central F
 Je totiž jedním z nejrozsáhlejších datasetů, které jsou v současnosti volně dostupné.
 Celkem obsahuje 1535 na sobě nezávislých snímků získaných z internetu.
 Tyto snímky jsou rozděleny na trénovací množinu obsahující 1201 snímků a testovací množinu s 334 snímky.
-Populární je nejen díky své velikosti, ale také kvůli tomu, že obsahuje velkou řadu velmi hustě zalidněných scén, což ukazuje průměrný počet lidí na jednotlivých snímcích tohoto datasetu, který se rovná 815 lidí na jeden obraz.
+Populární je nejen díky své velikosti, ale také kvůli tomu, že obsahuje velkou řadu velmi hustě zalidněných scén, což ukazuje průměrný počet lidí na jednotlivých snímcích tohoto datasetu, který se rovná 815 lidem na jeden obraz.
 Všechny osoby jsou ve snímcích anotovány pomocí bodů, které se nachází v pozicích odpovídajícím středům jejich hlav.
 Jeho další velkou výhodou je, že fotografie v něm obsažené jsou ve vysokém rozlišení.
 Průměrná velikost těchto obrazů je 5,84 megapixelů.
@@ -42,7 +42,7 @@ Augmentací dat pomocí náhodného ořezávání jde proto snadno dataset rozš
 \section{ShanghaiTech}
 Dataset ShanghaiTech \cite{ShanghaiTech} je další z v této oblasti často používaných datasetů.
 Jedná se o 1198 obrázků celkem obsahujících 330 165 osob, které jsou rozděleny do dvou částí.
-V části ShanghaiTech Part-A je obsaženo 482 obrázků získaných z internetu, zatímco v ShanghaiTech Part-B se nachází 716 obrázků pořízených hustě zalidněných ulicích města Shanghai. Obě části jsou dále rozděleny na testovací a trénovací množiny.
+V části ShanghaiTech Part-A je obsaženo 482 obrázků získaných z internetu, zatímco v ShanghaiTech Part-B se nachází 716 obrázků pořízených v hustě zalidněných ulicích města Shanghai. Obě části jsou dále rozděleny na testovací a trénovací množiny.
 Oproti UCF-QNRF nejsou snímky tohoto datasetu uložené v tak vysokém rozlišení. Průměrné rozlišení snímků první části je 0.5 megapixelů a druhé části 0.8 megapixelů.
 Průměrný počet lidí je však i zde velmi vysoký, jelikož i v tomto datasetu řada snímků zachycuje velmi husté davy lidí. V první části se na snímku nachází v průměru 501 osob a v druhé části 124 osob.
 Stjeně jako v UCF-QNRF je i zde každá osoba označena pouze jediným bodem, který je umístěný v pozici středu její hlavy.
@@ -60,7 +60,6 @@ Stjeně jako v UCF-QNRF je i zde každá osoba označena pouze jediným bodem, k
 
 \section{Fudan-ShanghaiTech}
 Převážná většina dostupných datasetů obsahuje pouze jednotlivé snímky a datasety, které obsahují videosekvence nebývají tak obsáhlé a rozmanité.
-
 Příčinou tohoto je náročnost anotování obrazů, která nejde automatizovat a musí být proto prováděna manuálně.
 Při anotování snímku musí osoba, která pro snímek vytváří základní pravdu, najít všechny lidi, kteří se v obraze nacházejí a označit jejich polohu, což je zdlouhavá činnost.
 Z tohoto důvodu také datasety jako ShanghaiTech nebo UCF-QNRF používají pro označení pozic osob pouze body ve středu hlav místo obdélníků, které by vymezovaly hranice hlav, či jednotlivých osob.
@@ -84,6 +83,25 @@ Rozmanitost situací, prostředí a světelných podmínek proto není tak velk�
 Průměrný počet lidí na snímcích je oproti UCF-QNRF a ShanghaiTech o řád nižší. Místo stovek se zde v průměru nachází 23 lidí na jeden snímek.
 Nejsou zde proto zachyceny tak husté davy a lidé jsou mnohem více separováni.
 Snímky jsou anotovány pomocí obdélníků, které udávají pozice a rozměry jednotlivých hlav.
+
+\section{PETS2009}
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.45\textwidth]{Figures/datasets/PETS/frame_0229.jpg}
+	\caption{Snímek z datasetu PETS2009 \cite{PETS2009}}
+	\label{fig:FDST}
+\end{figure}
+
+Dataset PETS2009 byl vytvořen pro workshopy PETS 2009 a Winter PETS 2009.
+Cílem bylo vytvořit systémy pro počítání lidí a určení hustoty davu, sledování pozic jednotlivců v davu a detekci detekci proudů lidí v davu a důležitých událostí, které v davu mohou nastat.
+Celý dataset je tvořený videi pořízenými v jedné scéně natočenými z několika různých úhlů pohledu.
+Některé kamery jsou úmístěny v blízkosti davu ve výšce očí, jiné jsou výše v pozici bezpečnostních kamer.
+Základní pravda je ale dostupná pouze pro jeden z pohledů, což je pohled bezpečnostní kamery zachycující celou scénu.
+Lidé se pohybují napříč scénou různými rychlostmi. V některých případech jsou v hustém davu a v jiných velmi separováni. V základní pravdě je každý člověk anotován obdélníkem, který obklopuje celé jeho tělo.
+
+
+
+
 
 \section{GTA5 Crowd Counting Dataset}
 Jak již bylo v této kapitole popsáno, sbírání a anotování rozsáhlých rozmanitých datasetů pořízených v reálném světě je časově velmi náročná činnost.
@@ -115,12 +133,12 @@ Aby měl hráč pocit, že simulovaný svět, ve kterém se nachází je reáln�
 	\centering
 	\includegraphics[width=0.7\textwidth]{Figures/datasets/GCC/Hitman_crowd.png}
 	\caption{Ukázka davu ve hře Hitman (2016) (převzato z \cite{ign_2017})}
-	\label{fig:RNN_architecture}
+	\label{fig:Hitman}
 \end{figure}
 
 
 Moderní počítačové hry jsou proto slibným zdrojem dat pro trénování neuronových sítí.
-Totu problematikou se zabývá i článek Learning from Synthetic Data for Crowd Counting in the Wild \cite{GCC_dataset}. 
+Touto problematikou se zabývá i článek Learning from Synthetic Data for Crowd Counting in the Wild \cite{GCC_dataset}. 
 Pro účely této práce vytvořili autoři dataset GTA5 Crowd Counting Dataset (GCC), který využívá hry Grand Theft Auto V \cite{GTAV} pro vytvoření syntetických scén.
 Tato hra nabízí 252 čtverečních kilometrů terénu, simulaci počasí i denního a nočního cyklu a postavy mohou být oděny do mnoha různých druhů oblečení, mohou mít řadu účesů.
 Dataset proto může být velmi rozmanitý.
@@ -133,29 +151,51 @@ Každá osoba je ve snímku anotována pomocí bodu umístěného do středu jej
 	\subfloat[]{\includegraphics[height=4cm]{Figures/datasets/GCC/GCC_1.png}}
 	\subfloat[]{\includegraphics[height=4cm]{Figures/datasets/GCC/GCC_2.jpg}}
 	\caption{Ukázka snímků obsažených v datasetu GCC \cite{GCC_dataset}}
-	\label{fig:QNRF}
+	\label{fig:GCC}
 \end{figure}
 
 Při pohledu na snímky tohoto datasetu je ale očividné, že se jedná o uměle vykreslenou scénu.
-Autoři článku proto navrhují postup, jak vygenerovaný dataset upravit, aby se blíže podobal reálným datům.
+Mezi trénovací datovou sadou a reálnými daty tedy dochází k posuvu domény (domain shift).
+Funkce definující obrazy v syntetickém datasetu a v reálných datech jsou si podobné, avšak stále se mezi nimi nacházejí rozdíly.
+Autoři článku proto navrhují postup, jak vygenerovaný dataset upravit, aby se blíže podobal reálným datům a doménová mezera (domain gap) mezi syntetickými a reálními daty tak byla menší.
 Tohoto dosahují pomocí neuronové sítě typu GAN (Generative adversarial network), jejímž cílem je syntetické obrazy upravit tak, aby se vzhledem více podobaly obrazům obsaženým v datasetech z reálného světa.
 Samotný estimátor je potom trénován až s pomocí takto upravených fotografií.
 
+\section{DroneCrowd}
+Jak již bylo na začátku této kapitoly částečně nastíněno, existují i datasety, které se zaměřují na počítání lidí ve snímcích pořízených z dronů, helikoptér, letadel a satelitů.
+Fotografie obsažené v takových datasetech se vyznačují tím, že jsou pořízeny z vysokého úhlu, někdy přímo z nadhlavníku.
+Z osob na těchto snímcích je vidět pouze hlava a ramena, které často v obraze zabírají oblasti o šířce a výšce o velikosti jednotek pixelů.
+Jedním z datasetů určených pro počítání lidí na základě pohledu z ptačí perspektivy je dataset DroneCrowd, který je součástí výzvy VisDrone, která má části zaměřující se na detekci a sledování objektů a počítání lidí v davu v obrazech pořízených pomocí dronu.
 
+\begin{figure}[h!]
+	\centering
+	\subfloat[]{\includegraphics[height=4cm]{Figures/datasets/DroneCrowd/00008.jpg}}
+	\subfloat[]{\includegraphics[height=4cm]{Figures/datasets/DroneCrowd/00012.jpg}}
+	\caption{Ukázka snímků obsažených v datasetu DroneCrowd \cite{DroneCrowd}}
+	\label{fig:DroneCrowd}
+\end{figure}
 
-
+Dataset obsahuje 33 600 snímů, které patří do 112 videí ve FullHD kvalitě.
+Tudíž mají snímky datasetu rozlišení 2,1 megapixelů.
+Celkem se na všech snímcích nachází 4 872 000 lidí.
+I zde jsou jednotliví lidé anotováni pomocí jediného bodu označujícího pozici hlavy.
 
 
 \begin{table}[h!]
 \centering
-\begin{tabular}{|l|r|r|l|}
+\begin{tabular}{|l|r|r|c|c|}
 \hline
-                    & \begin{tabular}[c]{@{}l@{}}počet\\ snímků\end{tabular} & \begin{tabular}[c]{@{}l@{}}průměrný počet\\ lidí na snímku\end{tabular} & \begin{tabular}[c]{@{}l@{}}průměrné\\ rozlišení snímku {[}px{]}\end{tabular} \\ \hline
-UCF-QNRF            & 1 535                                                   & 815                                                                     & 2013 * 2902                                                                  \\ \hline
-ShanghaiTech Part-A & 482                                                    & 501                                                                     & 589 * 868                                                                    \\ \hline
-ShanghaiTech Part-B & 716                                                    & 124                                                                     & 768 * 1024                                                                   \\ \hline
-Fudan-ShanghaiTech  & 15 000                                                 & 26                                                                      & 1080 * 1920                                                                  \\ \hline
+                    & \begin{tabular}[c]{@{}r@{}}počet\\ snímků\end{tabular} & \begin{tabular}[c]{@{}r@{}}průměrný počet\\ lidí na snímku\end{tabular} & \begin{tabular}[c]{@{}l@{}}průměrné\\ rozlišení snímku {[}px{]}\end{tabular} & video \\ \hline
+UCF-QNRF            & 1535                                                   & 815                                                                     & 2902 * 2013                                                                  & NE    \\ \hline
+ShanghaiTech Part-A & 482                                                    & 501                                                                     & 868 * 589                                                                    & NE    \\ \hline
+ShanghaiTech Part-B & 716                                                    & 124                                                                     & 1024 * 768                                                                   & NE    \\ \hline
+Fudan-ShanghaiTech  & 15 000                                                 & 26                                                                      & 1920 * 1080                                                                  & ANO   \\ \hline
+GTA5 Crowd Counting & 15 212                                                 & 501                                                                     & 1920 * 1080                                                                  & NE    \\ \hline
+DroneCrowd          & 33 600                                                  & 145                                                                     & 1920 * 1080                                                                  & ANO   \\ \hline
 \end{tabular}
+
+\caption{Porovnání základních vlastností popsaných datasetů}
+
 \end{table}
 
 \endinput

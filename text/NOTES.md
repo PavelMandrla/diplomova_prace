@@ -1,14 +1,14 @@
-- u převzatých obrázku přidat __převzato z__
+- u převzatých obrázku přidat __převzato z__ ✅
 
-## Úvod
-- přidat citace pro vrubovku, a k nějakým těm využitím
-  - klidně tam hoď i Fuska
-- jinak je to celkem fajn
+## Úvod ✅
+- přidat citace pro vrubovku, a k nějakým těm využitím ✅
+- jinak je to celkem fajn ✅
+- možná příliš odborné termíny ✅
 
 ## Historie
-- změnit název kapitoly - něco ve stylu _Analýza problému a existující řešení či co_
-- nelíbí se mu to rozdělení - "zneužívání šablony"
-- nelíbí se mu, že řeknu, že jsou dvě a najednou jsou tři skupiny řešení
+- změnit název kapitoly - něco ve stylu _Analýza problému a existující řešení či co_ ✅
+- nelíbí se mu to rozdělení - "zneužívání šablony" ✅
+- nelíbí se mu, že řeknu, že jsou dvě a najednou jsou tři skupiny řešení ✅
 - přidat nějaké ty metody s temporálními příznaky
 - __ty věci s density mapami jsou matoucí__
   - popisuju paramtery, které v rovnici ani nejsou

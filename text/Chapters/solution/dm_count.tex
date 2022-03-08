@@ -2,7 +2,7 @@
 
 Cílem zbytku navržené neuronové sítě je z časoprostorových příznaků získaných v předchozích částech vytvořit výslednou hustotní mapu.
 Specificky má síť za úkol vytvořit hustotní mapu, která odpovídá "základní pravdě" (Ground Truth), posledního snímku právě zpracovávané sekvence vstupních snímků.
-Jednou z možností by bylo učit síť co nejblíže replikovat hustotní mapy tvořené Gaussiány vložené do hustotní mapy v bodech, kde se v posledním snímku nacházejí jednotlivé lidské hlavy, jak bylo popsáno v kapitole \ref{sec:History}.
+Jednou z možností by bylo učit síť co nejblíže replikovat hustotní mapy tvořené Gaussiány vloženými do hustotní mapy v bodech, kde se v posledním snímku nacházejí jednotlivé lidské hlavy, jak bylo popsáno v kapitole \ref{sec:History}.
 V takovémto případě je často použita účelová funkce, které je definovaná na základě sumy chyby v jednotlivých bodech výsledného obrazu. Příkladem by mohla být například střední kvadratická chyba \ref{eq:MSE_loss}, nebo nebo absolutní chyba \ref{eq:AE_loss}.
 
 \begin{equation}
@@ -17,9 +17,9 @@ loss_{AE} = \frac{1}{n} \sum_{i=1}^{n} |x_i - y_i|
 
 Dle \cite{Bayesian_Crowd_Counting, DM_Count} ale není využití těchto účelových funkcí závislých na jednotlivých pixelech optimální, jelikož výsledná přesnost natrénované neuronové sítě je silně závislá na kvalitě vygenerovaných hustotních map základní pravdy.
 Získání vysoce kvalitní základní pravdy je ale obtížné.
-Datasety používané pro trénování neuronových sítí jsou totiž velmi obsáhlé a manuální anotace jednotlivých snímků, kde musí být označena každá hlava je proto časově velmi náročné.
+Datasety používané pro trénování neuronových sítí jsou totiž velmi obsáhlé a manuální anotace jednotlivých snímků, kde musí být označena každá hlava, je proto časově velmi náročná.
 Anotace se z toho důvodu u mnoha významných datasetů omezuje pouze na pozice hlav a nijak nebere v potaz jejich velikost v obraze. U Gaussiánů je proto často použit konstantní parametr rozptylu a vliv perspektivy způsobující rozdílné velikosti hlav v obraze není nijak brán v úvahu.
-Problémem může být také přesné určení pozice hlavy, kvůli částečným zakrytím, ke kterým může v obraze docházet.
+Kvůli částečným zakrytím, ke kterým může v obraze docházet, může být problémem také přesné určení pozice hlavy.
 Jednotliví lidé anotující datasety také mohou mít jiné preference k tomu, kam bod označující hlavu umisťují. V některých případech to může například být doprostřed čela, jindy ale třeba na nos.
 Tyto faktory znamenají, že vygenerovaná hustotní mapa často není optimální, což může vést ke zhoršení přesnosti trénované sítě.
 
@@ -41,7 +41,7 @@ loss_C(z, \hat{z}) = \Big|\|{z}\|_1 - \|\hat{z}\|_1\Big|
 
 Druhou částí účelové funkce je tzv. "Optimal Transport Loss". 
 Tato funkce využívá metod z matematické oblasti dopravních problémů.
-Jedním z prvních matematiků, který se touto oblastí zabýval byl Gaspard Monge, vévoda z Péluse, který se v roce 1781 zabýval problematikou konstrukce vojenského opevnění a tvorbu takové stavby zefektivnit.
+Jedním z prvních matematiků, který se touto oblastí zabýval byl Gaspard Monge, vévoda z Péluse, který se v roce 1781 zabýval problematikou konstrukce vojenského opevnění a způsoby, jak tvorbu takové stavby zefektivnit.
 Přesněji se zaměřil na konstrukci příkopů a valů.
 Je logické, že při konstrukci valu chceme využít zeminu, která byla vykopána z příkopu.
 Všechna tato zemina ale musí být přesunuta, a z ekonomických důvodů chceme, aby k přesunu došlo co nejoptimálnějším způsobem.
@@ -61,7 +61,7 @@ Rozložení \(\mu\) a \(\nu\) tedy můžeme vyjádřit jako pravděpodobnostní 
 Dále můžeme definovat funkci ceny \(c : X \times Y  \rightarrow \R^+ \), která vyjadřuje práci nutnou k přemístění jedné jednotky hmoty z bodu \(x \in X\) do bodu \(y \in Y\).
 Mongeho-Kantorovichův problém optimálního přesunu (Optimal Transport) se zabývá tím, jak přesunout všechnu hmotu z \(\mu\) do \(\nu\) tak, aby celková cena přesunu \(c\) byla minimální.
 
-V \cite{DM_Count} definují optimální přesun pomocí vzorce \ref{eq:ot_1}, kde \(C\) značí matici obsahující všechny ceny přemístění bodu z \(\mu\) a \(\nu\) a \(\Gamma\) je množinou všech možných způsobů, jak tyto body přemístit.
+V \cite{DM_Count} definují optimální přesun pomocí vzorce \ref{eq:ot_1}, kde \(C\) značí matici obsahující všechny ceny přemístění hmoty z bodů v \(\mu\)  do bodů v \(\nu\) a \(\Gamma\) je množinou všech možných způsobů, jak tyto body přemístit.
 
 \begin{equation}
 \mathcal{W}(\mu, \nu) = \min_{\gamma in \Gamma} \langle C, \gamma \rangle
@@ -69,10 +69,10 @@ V \cite{DM_Count} definují optimální přesun pomocí vzorce \ref{eq:ot_1}, kd
 \end{equation}
 
 Tato minimální cena může být použita jako metrika pro porovnání podobnosti dvou měr pravděpodobnosti.
-Můžeme na to dívat tak, že čím méně zeminy musí být přemístěno z hromady \(\mu\), abychom dostali hromadu \(\nu\), tím podobnější si \(\mu\) a \(\nu\) musí být.
+Lze na to nahlížet tak, že čím méně zeminy musí být přemístěno z hromady \(\mu\), abychom dostali hromadu \(\nu\), tím podobnější si \(\mu\) a \(\nu\) musí být.
 Optimal Transport Loss přesně tohoto principu využívá pro porovnání výsledné predikce sítě a 
 základní pravdy.
-Aby se tyto mapy daly pomocí Mongeho-Kantorovichova optimálního přesunu porovnat, jsou před výpočtem metriky znormalizovány, aby suma přes obě z nich byla rovna jedné.
+Aby se tyto mapy daly pomocí Mongeho-Kantorovichova optimálního přesunu porovnat, jsou před výpočtem metriky znormalizovány, aby suma přes každou z nich byla rovna jedné.
 Jako cenovou funkci použili autoři \cite{DM_Count} kvadrát Euklidovské vzdálenosti bodů v planární mapě \(c(z(i), \hat{z}(j)) = \|z(i) - \hat{z}(j)\|_2^2\), kde \(z(i)\) a \(\hat{z}(j)\) jsou koordináty bodů \(i\) a \(j\).
 
 \begin{equation}
@@ -81,9 +81,10 @@ loss_{OT}(z, \hat{z}) = \mathcal{W}\bigg(\frac{z}{\|z\|_1}, \frac{\hat{z}}{\|\ha
 \end{equation}
 
 Pro získání gradientu, který může být sítí zpětně šířen a na jehož základě dojde k přenastavení jejích vah, použili autoři duální problém k optimálnímu přesunu, jenž byl formulován Leonidem Kantorovičem.
-Caffarelli \cite{Caffarelli_dual_problem} tento problém připodobňuje k situaci, kdy je pro přemístění zeminy z \(\mu\) do \(\nu\) použit externí přepravce, který si v nechává platit v bodě naložení \(\mu(x_i)\) a v bodě vyložení \(\nu(x_i)\).
-Jeho ceny nesmí být vyšší, než cena \(c(x_i, y_i)\), jelikož to by bylo pro objednatele přepravy nevýhodné a přepravce by si proto neobjednal.
+Caffarelli \cite{Caffarelli_dual_problem} tento problém připodobňuje k situaci, kdy je pro přemístění zeminy z \(\mu\) do \(\nu\) použit externí přepravce, který si v nechává platit v bodě naložení \(\mu(x_i)\) a v bodě vyložení \(\nu(y_i)\).
+Jeho ceny nesmí být vyšší, než cena \(c(x_i, y_i)\), jelikož by to bylo pro objednatele přepravy nevýhodné a přepravce by si proto neobjednal.
 Přepravce proto řeší, jak nastavit ceny, aby maximalizoval svůj zisk, avšak jeho cena nebyla vyšší, než cena, kterou by platil objednavatel, kdyby převoz zeminy organizoval sám.
+Touto maximalizací musí nutně dojít ke stejné celkové ceně, jako je řešení rovnice \ref{eq:ot_1}.
 V \cite{DM_Count} je tento problém formulován rovnicí \ref{eq:ot_2}, kde \(\alpha\) a \(\beta\) jsou výplatní funkce, udávající, kolik si přepravce účtuje za naložení a vyložení materiálu.
 
 \begin{equation}
@@ -100,9 +101,8 @@ Rovnice \ref{eq:ot_loss} lze s použitím duálního problému přepsat jako \( 
 
 Pro zjištění řešení \(\alpha^*\) a \(\beta^*\) používají autoři Sinkhornův algoritmus.
 Při jeho použití síť z počátku rychle konverguje do lokálního optima, avšak tato konvergence se také rychle zpomaluje.
-Dle autorů toto zpomalování způsobí, že jelikož je trénování sítě po určitém počtu trénovacích epoch ukončeno, síť nikdy optima nedosáhne.
-Predikovaná hustotní mapa proto bude velice podobná základní pravdě, ale nebude identická.
-Problémy podle autorů nastávají hlavně v těch částech scény, kde je hustota lidí nízká a lidé jsou separovaní.
+Jelikož autoři omezili množství iterací Sinkhornova algoritmu, vrací tento algoritmus pouze přibližná řešení \(\alpha^*\) a \(\beta^*\), což způsobuje, že predikovaná hustotní mapa bude  podobná základní pravdě, ale nebude identická.
+Toto podle autorů ve výsledné hustotní mapě způsobuje problémy, které nastávají hlavně v těch částech scény, kde je hustota lidí nízká a lidé jsou separováni.
 
 \begin{figure}[h!]
 	\centering
@@ -112,7 +112,7 @@ Problémy podle autorů nastávají hlavně v těch částech scény, kde je hus
 \end{figure}
 
 Pro zpřesnění predikcí neuronové sítě v těchto problematických případech zavedli autoři do výsledné účelové funkce třetí část a to tzv. "Total Variation Loss".
-Celková variační vzdálenost může být stejně jako cena optimálního přesunu použita pro porovnání dvou pravděpodobnostních měr \(\mu\) a \(\nu\) na stejném měřitelném prostoru \(\mathcal{A}, \mathcal{F})\) \cite{Total_variation}.
+Celková variační vzdálenost může být stejně jako cena optimálního přesunu použita pro porovnání dvou pravděpodobnostních měr \(\mu\) a \(\nu\) na stejném měřitelném prostoru \(\mathcal{A}, \mathcal{F}\) \cite{Total_variation}.
 Vzdálenost těchto dvou pravděpodobnostních měr je definovaná následujícím vzorcem. (V literatuře se vyskytuje i verze, kdy je tato vzdálenost definovaná, jako dvojnásobek uvedeného vzorce, čímž se dá zbavit \(\frac{1}{2}\).)
 
 \begin{equation}
@@ -121,7 +121,7 @@ Vzdálenost těchto dvou pravděpodobnostních měr je definovaná následujíc�
 \end{equation}
 
 Budou-li \(\mu\) a \(\nu\) zcela disjunktní a nebudou tedy sdílet žádnou "hmotu", bude hodnota takto definované metriky rovna jedné.
-Čím více "hmoty" sdílí, 
+Čím více "hmoty" sdílí, tím menší tato hodnota bude.
 Při minimalizaci tedy dochází k tomu, že se \(\mu\) a \(\nu\) mnohem více překrývají a jsou-li identické, je hodnota \(\delta_{TV}(\mu, \nu)\) rovna nule.
 
 \begin{equation}
@@ -131,7 +131,7 @@ loss_{TV}(z, \hat{z}) = \delta_{TV} \bigg( \frac{z}{\|z\|_1}, \frac{\hat{z}}{\|\
 \end{equation}
 
 
-Výsledná účelová funkce je, jak již bylo dříve zmíněno, lineární kombinací funkcí "Counting Loss",  "Optimal Transport Loss" a "Total Variation Loss". Parametry \(\lambda_1\) a \(\lambda_2\) slouží k nastavení, jaký vliv budou mít "Optimal Transport Loss" a "Total Variation Loss" ve výsledné účelové funkci.
+Výsledná účelová funkce je, jak již bylo dříve zmíněno, lineární kombinací funkcí "Counting Loss",  "Optimal Transport Loss" a "Total Variation Loss". Parametry \(\lambda_1\) a \(\lambda_2\) slouží k nastavení síly vlivu "Optimal Transport Loss" a "Total Variation Loss" ve výsledné účelové funkci.
 Aby autoři zajistili, že "Total Variation Loss" a "Optimal Transport Loss" budou mít stejné měřítko, je výsledek "Total Variation Loss" vynásoben počtem lidí v základní pravdě.
 
 \begin{equation}

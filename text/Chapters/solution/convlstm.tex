@@ -36,6 +36,7 @@ Jak může být ze schématu patrné, tak LSTM má dvě stavové proměnné.
 
 První z nich (procházející vrchní částí diagramu) slouží k ukládání dlouhodobých informací a často se nazývá stav buňky (cell state). Druhá z nich se nazývá skrytý stav (hidden state) a jedná se o paměť, se kterou LSTM buňka aktivně pracuje a na základě které rozhoduje, jak postupovat dále.
 Postup vyhodnocování vstupních informací se dá rozdělit do několika kroků.
+V následujících vzorcích v čase \(t\) vyjadřuje \(C_t\) stav buňky, \(h_t\) skrytý stav a výstup, \(x_t\) vstup a \(W_{...}\) a \(b_{...}\) značí váhy a zkreslení (bias) neuronů popisovaných bran.
 
 \begin{enumerate}
 

@@ -1,0 +1,37 @@
+\chapter{Implementace navrženého řešení}
+Pro implementaci modelu navrženého v této práci, byl použit jazyk Python 3, který byl zvolen z důvodu jeho popularity v oblastech strojového učení a zpracování obrazu, což je dáno a zároveň také způsobuje dostupnost celé řady rozsáhlých a pokročilých knihoven, které práci v těchto oblastech výrazně ulehčují.
+Sice se jedná o vysokoúrovňový interpretovaný jazyk, což vede k nižšímu výkonu oproti aplikacím, které jsou psány v jazycích jako Rust nebo C, avšak tento nedostatek je často kompenzován samotnými knihovnami, které jsou implementovány právě v těchto nízkoúrovňových jazycích.
+Python 3 navíc nabízí velmi expresivní syntaxi, která umožňuje velmi rychlý a pohodlný vývoj, což jej činí ideálním jazykem pro rychlé softwarové prototypování.
+Z těchto důvodů se stal velmi populárním v akademické sféře, kde k prototypování aplikací využívajících strojové učení dochází velmi často.
+Toto se projevuje i v řadě článků, ze kterých bylo v této práci čerpáno, kde ukázkové zdrojové kódy byly často implementovány právě v Pythonu.
+
+Jak již bylo řečeno, tento jazyk nabízí široký ekosystém knihoven a frameworků pro strojové učení a práci s neuronovými sítěmi.
+Do této kategorie spadá například TensorFlow \cite{tensorflow}, Keras \cite{Keras} nebo PyTorch \cite{PyTorch}.
+Právě poslední zmíněný framework byl vybrán pro implementaci neuronové sítě navržené v kapitole \ref{sec:Propesed_solution}.
+Jedná se o open source framework, jehož cílem je zjednodušit vytváření a učení komplexních hlubokých neuronových sítí a jedná se o jeden z nepoužívanějších nástrojů v této oblasti.
+To dokazuje i jeho nasazení ve velkých technologických společnostech, jako jsou Tesla, META, NVIDIA nebo Amazon.
+Primárně je určen pro použití s jazykem Python, avšak nabízí i rozhraní pro C++ a jiné jazyky, takže v případě, že programátor chce výslednou aplikaci co nejvíce výkonnostně vyladit, či použít implementovaný model v aplikaci založené na jiných technologiích, může využít právě tohoto rozhraní.
+Jeho velikou výhodou je snadné použití GPU akcelerace pro složité operace s tenzory, což je základní datová struktura, se kterou PyTorch pracuje.
+Programátor tak pomocí tohoto frameworku může velmi snadno a rychle vytvořit komplexní neuronovou síť a snadno ji natrénovat.
+
+\begin{figure}[h!]
+	\centering
+	\subfloat[logo programovacího jazyka Python]{\includegraphics[height=3.5cm]{Figures/implementation/python_logo.pdf}}
+	\hspace{0.2\textwidth}
+	\subfloat[logo frameworku PyTorch]{\includegraphics[height=3.5cm]{Figures/implementation/pytorch_logo.pdf}}
+	\caption{loga použitých technologií}
+	\label{fig:logos}
+\end{figure}
+
+\section{Načítání vstupu a augmentace dat}
+Jelikož část sítě používá rekurentní LSTM buňky, je nutné, aby vstupem takové sítě byla sekvence po sobě jdoucích obrazů.
+Výstup buňky totiž nezáleží pouze na aktuálním vstupu, ale i na kontextu získaném ze vstupů předchozích.
+Stejně tak i při adaptaci neuronů během trénování sítě, se musí nastavit i váhy mezi neuronem a skrytými stavy.
+Jelikož je výstpu neuronu závislý i na stavech předchozích, tak změna jeho vah je závislá nejen na chybě aktuální, ale i chybách v následujících krocích sekvence.
+Proto i při trénování sítě je nutné, aby vstupy, pomocí kterých je síť trénována, byly ve formě sekvence.
+
+
+
+
+
+\endinput
