@@ -1,4 +1,4 @@
-from models.model import MyModel
+from models.model import *
 from datasets import *
 from torch.utils.data import DataLoader
 from testing.utils import *
@@ -15,6 +15,7 @@ def initialize(dataset_name, model_path):
         dataset_path = '../datasets/VisDrone2020-CC'
         input_size = (1920, 1080)
 
+    # model = MyModelAlternative(model_path, input_size=input_size)
     model = MyModel(model_path, input_size=input_size)
 
     if dataset_name == 'FDST':
@@ -62,10 +63,11 @@ def initialize(dataset_name, model_path):
 # model = model.eval().to(device)
 
 dataset_name = 'FDST'
-model_path = './trained_models/len5_stride3.tar'
+# model_path = './trained_models/len5_stride3.tar'
+model_path = '../save_dir/3_3/15_ckpt.tar'
 model, dataloader, dataset, device = initialize(dataset_name, model_path)
 
-evaluate_dataset(model, dataloader, device, 'len5_stride3_fdst.csv')
+evaluate_dataset(model, dataloader, device, 'old_len3_stride_3.csv')
 
 # plot_timeseries(model, dataset, device, 0, 100)
 # eval_video(model, '../datasets/VSB/20211005_120808.MOV', device, stride=3, sequence_len=5)

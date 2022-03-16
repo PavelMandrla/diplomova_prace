@@ -1,0 +1,15 @@
+\chapter{Testování a výsledky}
+\label{sec:Testing}
+
+Navržená neuronová síť byla testována na sestavě s Linuxovou distribucí Ubuntu 21.10 a obsahující osmijádrový procesor AMD Ryzen 7 5800H, 16 GB RAM a grafickou kartu NVIDIA GeForce RTX 3060 6GB GDDR6.
+Právě velikost grafické paměti se při testování sítě ukázala jako největší limitace.
+Při akceleraci operací neuronové sítě pomocí grafické karty jsou model i právě zpracovávané data nahrány v grafické paměti, kde za běhu aplikace zabírají kolem pěti GB paměti. 
+Na grafické kartě tak zůstávaly řádově stovky MB volné paměti, která bývá navíc z části zabraná systémovými aplikacemi, což nedávalo mnoho místa pro větší zesložitění architektury sítě.
+
+
+
+
+
+
+
+\endinput

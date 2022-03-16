@@ -75,7 +75,10 @@ files = list(
   c('./statistics/data_new/len3_stride1_fdst.csv', '3_1'),
   c('./statistics/data_new/len3_stride3_fdst.csv', '3_3'),
   c('./statistics/data_new/len3_stride5_fdst.csv', '3_5'),
-  c('./statistics/data_new/len5_stride1_fdst.csv', '5_1')
+  c('./statistics/data_new/len5_stride1_fdst.csv', '5_1'),
+  c('./statistics/data_new/new_len1_stride1_fdst.csv', 'new_1_1'),
+  c('./statistics/data_new/new_len3_stride3_fdst.csv', 'new_3_3'),
+  c('./statistics/data_new/new_len5_stride3_fdst.csv', 'new_5_3')
 )
 
 
@@ -88,6 +91,9 @@ Metrics::mae(actual = data$truth, predicted = data$`3_1`)
 Metrics::mae(actual = data$truth, predicted = data$`3_3`)
 Metrics::mae(actual = data$truth, predicted = data$`3_5`)
 Metrics::mae(actual = data$truth, predicted = data$`5_1`)
+Metrics::mae(actual = data$truth, predicted = data$`new_1_1`)
+Metrics::mae(actual = data$truth, predicted = data$`new_3_3`)
+Metrics::mae(actual = data$truth, predicted = data$`new_5_3`)
 # Metrics::mae(actual = data$truth, predicted = data$`2_1`)
 
 print("RMSE")
@@ -97,6 +103,9 @@ Metrics::rmse(actual = data$truth, predicted = data$`3_1`)
 Metrics::rmse(actual = data$truth, predicted = data$`3_3`)
 Metrics::rmse(actual = data$truth, predicted = data$`3_5`)
 Metrics::rmse(actual = data$truth, predicted = data$`5_1`)
+Metrics::rmse(actual = data$truth, predicted = data$`new_1_1`)
+Metrics::rmse(actual = data$truth, predicted = data$`new_3_3`)
+Metrics::rmse(actual = data$truth, predicted = data$`new_5_3`)
 # Metrics::rmse(actual = data$truth, predicted = data$`1_1`)
 
 print("MAPE")
@@ -106,6 +115,10 @@ Metrics::mape(actual = data$truth, predicted = data$`3_1`)
 Metrics::mape(actual = data$truth, predicted = data$`3_3`)
 Metrics::mape(actual = data$truth, predicted = data$`3_5`)
 Metrics::mape(actual = data$truth, predicted = data$`5_1`)
+
+Metrics::mape(actual = data$truth, predicted = data$`new_1_1`)
+Metrics::mape(actual = data$truth, predicted = data$`new_3_3`)
+Metrics::mape(actual = data$truth, predicted = data$`new_5_3`)
 # Metrics::mape(actual = data$truth, predicted = data$`2_1`)
 
 

@@ -17,22 +17,16 @@ class Trainer(object):
 
         self.save_dir = self.get_save_dir()
         dataset = FDST(args.dataset_path, training=True, sequence_len=args.sequence_length, stride=args.stride)
-        # dataset = VisDrone2020(
-        #     args.dataset_path,
-        #     training=True,
-        #     sequence_len=args.sequence_length,
-        #     stride=args.stride)
-        # dataset = QNRF(args.dataset_path, training=True)
 
         self.dataloader = DataLoader(dataset=dataset, batch_size=1, shuffle=True, num_workers=1)
 
         self.model = MyModel(sequence_len=args.sequence_length, stride=args.stride)
-        #self.model = MyModel('./trained_models/VisDrone/len3_stride3.tar')
+
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
-        downsample_ratio = 2        # TODO -> CHANGE??? IS IT OK??
+        downsample_ratio = 2
         self.ot_loss = OT_Loss(args.crop_size, downsample_ratio, args.norm_cood, self.device, args.num_of_iter_in_ot, args.reg)
         self.tv_loss = nn.L1Loss(reduction='none').to(self.device)
         self.mse = nn.MSELoss().to(self.device)

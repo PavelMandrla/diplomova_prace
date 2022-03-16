@@ -24,11 +24,142 @@ Programátor tak pomocí tohoto frameworku může velmi snadno a rychle vytvoři
 \end{figure}
 
 \section{Načítání vstupu a augmentace dat}
-Jelikož část sítě používá rekurentní LSTM buňky, je nutné, aby vstupem takové sítě byla sekvence po sobě jdoucích obrazů.
+Jelikož část sítě používá rekurentní ConvLSTM buňky, je nutné, aby vstupem takové sítě byla sekvence po sobě jdoucích obrazů.
 Výstup buňky totiž nezáleží pouze na aktuálním vstupu, ale i na kontextu získaném ze vstupů předchozích.
 Stejně tak i při adaptaci neuronů během trénování sítě, se musí nastavit i váhy mezi neuronem a skrytými stavy.
 Jelikož je výstpu neuronu závislý i na stavech předchozích, tak změna jeho vah je závislá nejen na chybě aktuální, ale i chybách v následujících krocích sekvence.
 Proto i při trénování sítě je nutné, aby vstupy, pomocí kterých je síť trénována, byly ve formě sekvence.
+
+O to se stará třída \texttt{SequentialDataset}, která rozšiřuje funkcionalitu třídy \texttt{Dataset} z frameworku PyTorch.
+Jejím účelem je automatické načítání jednotlivých prvků datasetu pomocí metody \texttt{\_\_getitem\_\_}, což je Pythonu tzv. kouzelná metoda (Magic Method), která umožňuje přistupovat k objektu pomocí indexovacího operátoru (\texttt{[i]}).
+To znamená, že k jednotlivým prvkům datasetu lze přistupovat, jako kdyby se nacházely v poli.
+
+Jelikož je každý individuální dataset jinak strukturovaný a data jsou uložena v jiných formátech, je tato třída pouze abstraktním předkem a pro každý dataset musí být některé metody deklarované v třídě \texttt{SequentialDataset} implementovány zvlášť.
+Konkrétně se jedná o metodu \texttt{index\_inputs}. Cílem této metody je vytvořit seznam cest k jednotlivým snímkům, které prvek datasetu obsahuje, a načíst do paměti základní pravdu patřící poslednímu snímku v této sekvenci.
+Metoda \texttt{\_\_getitem\_\_} při přístupu k prvku nahraje podle tohoto seznamu požadovanou sekvenci snímků vrátí ji společně s patřičnou základní pravdou.
+
+Zároveň se tato třída stará o augmentaci dat trénovací množiny.
+Augmentace dat slouží k umělému rozšíření datasetu modifikováním jeho prvků, čímž se předchází overfittingu sítě.
+Ten vzniká tak že vytvořený model je příliš adaptovaný na data obsažená v trénovací množině.
+V té se ale může nacházet šum (informace, které by neměly být pro model relevantní), který začne negativně ovlivňovat výsledný model.
+Pokud například trénovací množina obsahuje snímky pořízené pouze na malém množství různých scén, hrozí, že si tyto scény zapamatuje a při reálném nasazení na jiné scéně se její výkon zhorší.
+
+Třída \texttt{SequentialDataset} proto má dva módy, ve který může operovat.
+První z nich je \textbf{testovací} mód, ve kterém nedochází žádné úpravě snímků prvků, kromě normalizace barev.
+Druhým z nich je \textbf{trénovací} mód, kdy jsou snímky sekvence upraveny, aby neuronová síť měla při trénování na vstupu pokaždé trochu jiná data a šum tak neměl tak velký vliv.
+Jelikož každý snímek v sekvenci je závislý na snímku předchozím, musí tato třída zajistit, že všechny snímky v sekvenci budou upraveny stejným způsobem, zároveň se také musí starat o to, aby základní pravda zůstala konzistentní s provedenými úpravami.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.45\textwidth]{Figures/implementation/overfitting.pdf}
+	\caption{Příklad overfittingu. Černě je znázorněna kýžená funkce, zatímco červeně je vyznačena výsledná funkce, která je ovlivněná šumem v trénovací množině. (převzato z \cite{wiki_overfitting})}
+	\label{fig:overfitting}
+\end{figure}
+
+Třída \texttt{SequentialDataset} provádí augmentaci dat celkem třemi způsoby.
+\begin{description}
+\item[horizontální převrácení] Při každém dotazu na získání prvku trénovací množiny je padesátiprocentní šance, že snímky výsledné množiny a související základní pravda budou horizontálně převráceny.
+
+\item[náhodné škálování]
+Pokud dataset obsahuje například snímky lidí jdoucích po chodníku, který je kolmý ke směru pohledu kamery, budou mít jednotliví lidé v obraze zhruba stejnou velikost hlav.
+Přiblížením či oddálením se zároveň zvětší či zmenší velikost objektů v obrazech, důsledkem čehož bude mnohem větší rozmanitost datasetu.
+Natrénovaný model tak bude mnohem robustnější vůči rozdílným velikostem hlav v obraze způsobených perspektivou.
+
+\item[náhodné ořezání]
+Jak bylo zmíněno v kapitole \ref{sec:Datasets}, řada datasetů obsahuje snímky ve vysokém rozlišení.
+Toho může být využito pro augmentaci dat tak, že pokaždé, když má být snímek použit, je z něj vyřezána jiná část, která je následně předána neuronové síti.
+Jelikož mají tyto snímky stovky tisíc pixelů, bude i ořezaný obrázek v dostatečně dobré kvalitě a neuronová síť tak může mít na vstupu mnohem větší množství rozdílných snímků.
+
+
+\end{description}
+
+K ořezání snímku by stejně muselo dojít, jelikož velikost vstupních snímků musí být kvůli skrytým stavům ConvLSTM známa předem a v datasetech se mohou nacházet sekvence snímků o různých velikostech a poměrech stran. Škálování obrazů na jednotnou velikost by v takovém případě mělo za výsledek deformaci snímků.
+Při trénování tak síť na vstupu očekává obrazy o velikosti 512*512 pixelů.
+Jelikož síť tvoří pouze konvoluční vrstvy a výstup konvoluční sítě nesměřuje do žádné plně propojené vrstvy, počet vah v síti se nemění a při nasazení modelu na reálných datech může být síť instancována pro jakkoliv velké obrazy.
+
+\section{Neuronová síť}
+Implementace samotné neuronové sítě je díky použití frameworku PyTorch velmi prostá.
+Například jsou v tomto frameworku již dostupné implementace mnoha variant sítě ResNet, tudíž tato síť nemusí být implementována od základu.
+V této práci proto byla použita dostupná síť ResNet-18.
+Tato implementace je původně přizpůsobená pro dataset ImageNet, což je rozsáhlý dastaset určený pro klasifikaci objektů v obraze.
+Celkem obsahuje více než 20 000 různých tříd objektů a síť dostupná ve frameworku Pytorch je proto zakončena plně propojenou (fully connected) částí, která obsahuje stejné množství výstupních neuronů.
+Tato část byla ze sítě sítě odstraněna, aby výstupem sítě ResNet-18 nebyl vektor, nýbrž třídimenzionální tenzor, se kterým mohou dále pracovat další konvoluční vrstvy.
+V implementované síti byla použita předtrénovaná verze sítě ResNet-18, což znamená že její váhy byly předtím nastaveny trénováním na datasetu ImageNet \cite{imagenet}, s cílem využít možnost, že nízkoúrovňové příznaky, které jsou extrahovány při klasifikaci objektů by se mohly podobat příznakům extrahovaným při vytváření hustotní mapy a využít tak efektu přenosového učení (Transfer learning) a urychlit tak nastavení správných hodnot vah v síti.
+
+Implementace ConvLSTM je založená na projektu ConvLSTM-Pytorch dostupného z \cite{convlstm_pytorch}, jenž implementuje ConvLSTM síť pomocí frameworku PyTorch a aplikuje ji na problém MovingMNIST \cite{moving_mnist}.
+
+ConvLSTM vrstva potřebuje při vytváření sítě znát velikost vstupního tenzoru (výška, šířka, počet kanálů, délka vstupní sekvence), velikost konvolučního filtru a počet kanálů v tenzoru výstupním.
+Podle těchto informací mohou být vytvořeny skryté stavy, které mají stejnou šířku a výšku jako vstupní tenzor a jejich počet kanálů je stejný jako v tenzoru výstupním.
+Tyto stavy jsou při zpracovávání prvního snímku frekvence nastaveny na nulové hodnoty.
+
+Při dopředném šíření signálu ComvLSTM buňkou dojde ke konkatenaci vstupního tenzoru se skrytým stavem buňky a takto získaný tenzor je dán na vstup konvolučních filtrů, jejichž počet je roven čtyřnásobku počtu kanálů ve výstupním tenzoru, což je dáno tím, že s tímto tenzorem pracují c ConvLSTM buňce celkem čtyři brány.
+Po aplikování konvolucí je výsledek rozdělen na čtyři části a každá z těchto částí je dána na vstup patřičné brány.
+Následně na základě výstupu těchto bran je vypočítán nový stav buňky a z něj nový stav skrytého stavu a výstup.
+
+\begin{lstlisting}[language=Python, caption={kód popisující dopředné šíření signálu v ConvLSTM vrstvě}]    
+# sloučení vstupu a skrytého stavu a aplikování konvoluce
+combined = torch.cat((x, hx), 1)
+gates = self.conv(combined) 
+
+# rozdělení na 4 části
+ingate, forgetgate, cellgate, outgate = torch.split(
+													gates,
+													self.num_features,
+													dim=1)
+# aplikování bran ConvLSTM buňky
+ingate = torch.sigmoid(ingate)		# vstupní brána
+forgetgate = torch.sigmoid(forgetgate)	# zapomínací brána
+cellgate = torch.tanh(cellgate)	# vstupní modulační brána
+outgate = torch.sigmoid(outgate) # výstupní brána
+
+# výpočet nového stavu buňky a skrytého stavu
+cy = (forgetgate * cx) + (ingate * cellgate)
+hy = outgate * torch.tanh(cy)
+output_inner.append(hy)
+hx = hy
+cx = cy
+\end{lstlisting}
+
+Celou ConvLSTM část sítě zastřešuje třída \texttt{Encoder}.
+Ta počítá s tím, že mezi jednotlivými ConvLSTM vrstvami se mohou nacházet vrstvy jiného typu.
+Při vytváření této třídy jsou proto vyžadovány dva seznamy stejné velikosti.
+Jeden z nich obsahuje seznam ConvLSTM vrstev s nastavenými parametry a druhý obsahuje seznamy konvolučních, dekonvolučních a poolingových vrstev, kterými signál prochází bezprostředně před zpracováním ConvLSTM vrstvou.
+V případě, že nerekurentní složka v síti není potřeba, může být na vstupu pouze prázdný seznam.
+Při dopředném šíření signálu pracuje na etapy, kdy každá etapa začínám aplikováním odpovídající nerekurentní sítě ze seznamu na vstupní data a následně předání sekvence zpracovaných dat na vstup ConvLSTM vrstvy.
+Sekvence výstupů ConvLSTM vrstvy je následně dána na vstup následující etapy.
+
+\begin{lstlisting}[language=Python, caption={Kód popisující dopředné šíření signálu během jedné etapy}]    
+    def forward_by_stage(self, inputs, subnet, rnn):
+        seq_number, batch_size, input_channel, height, width = inputs.size()
+        inputs = torch.reshape(inputs, (-1, input_channel, height, width))
+        # aplikování nerekurentní konvoluční sítě
+        inputs = subnet(inputs)
+        inputs = torch.reshape(inputs, (seq_number, batch_size, inputs.size(1),
+                                        inputs.size(2), inputs.size(3)))
+        # aplikování rekurentní ConvLSTM vrstvy
+        outputs_stage, state_stage = rnn(inputs, None)
+        return outputs_stage, state_stage
+\end{lstlisting}
+
+V navržené síti byly použity dvě ConvLSTM vrstvy, s tím, že před aplikováním každé z nich byla na vstup aplikována konvoluce o velikosti 3x3 s Leaky ReLU (Leaky Rectified Linear Unit) \cite{LeakyReLU} aktivační funkcí.
+První konvoluční vrstva sníží dimenzi výstupu ze sítě ResNet a z vektorů o 512 prvcích uložených v jednotlivých pixelech vytvoří vektory o délce 64. 
+S takto velkými tenzory pracují i ConvLSTM vrstvy.
+Jejich vstup tedy má stejnou výšku a šířku jako výstup sítě ResNet, avšak mají pouze 64 kanálů.
+
+Výstup pro poslední prvek vstupní sekvence je dán na vstup poslední části sítě, jejímž účelem je vytvořit výslednou hustotní mapu.
+Jelikož je ale po zpracování vstupního obrazu sítí ResNet a ConvLSTM částí sítí výška i šířka výsledného tenzoru poměrně malá, je nejdříve tento tenzor pomocí bilineární interpolace zvětšen na šestnáctinásobek své velikosti.
+Takto zvětšený tenzor je zpracován dvěma konvolučními vrstvami o velikosti 3x3 a následně je předložen konvoluci o velikosti 1, která vytvoří jednokanálový obraz, který je výslednou hustotní mapou.
+
+\section{Trénování}
+O trénování modelu se stará třída Trainer, jejíž implementace je založena na implementaci k článku \cite{DM_Count}.
+Ta na základě vstupních parametrů instancuje třídu trénovacího datasetu a trénovanou neuronovou síť.
+Síť je trénovaná po epochách, kde celkový počet epoch je stanovený parametrem, který zadá uživatel.
+V každé epoše se postupně projdou všechny sekvence snímků obsažené v trénovací množině, pro každou sekvenci se vypočítá chyba, která je následně zpětně šířená sítí a základě které následně dochází k změně vah v síti.
+
+
+
+
+
 
 
 
