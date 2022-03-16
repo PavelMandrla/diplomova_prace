@@ -6,6 +6,20 @@ Právě velikost grafické paměti se při testování sítě ukázala jako nejv
 Při akceleraci operací neuronové sítě pomocí grafické karty jsou model i právě zpracovávané data nahrány v grafické paměti, kde za běhu aplikace zabírají kolem pěti GB paměti. 
 Na grafické kartě tak zůstávaly řádově stovky MB volné paměti, která bývá navíc z části zabraná systémovými aplikacemi, což nedávalo mnoho místa pro větší zesložitění architektury sítě.
 
+Hlavním cílem testování bylo zjistit, jaký vliv má použití sekvence více snímků na vstupu na přesnost výsledného počtu.
+Z toho důvodu bylo natrénováno několik modelů, které se lišily hodnotou parametru \texttt{sequence\_length} udávajícího délku vstupní sekvence, ze které model estimuje počet lidí v jejím posledním obraze.
+Stejnou délku měly i sekvence v trénovací množině pomocí kterých byl estimátor natrénován.
+
+Aby se lidskému mozku videosekvence zdály plynulé, jsou při snímání kamerou snímkovány s poměrně vysokou frekvencí. 
+Ta může u klasického videa dosahovat například dosahovat hodnoty třicet snímků za sekundu, což znamená, že časový rozdíl mezi jednotlivými snímky je zhruba 0,03 sekundy.
+Lidé jsou navíc poměrně pomalu se pohybující stvoření.
+Člověk, který jde rychlostí \(4 kmh^{-1}\) se tak za třicetinu sekundy pohne o \(3,5 cm\).
+Efekt tohoto pohybu v obraze také bude velmi záviset na tom, jak daleko od kamery se daná osoba nachází. 
+V případě, že by scéna byla snímána kamerou s horizontálním rozlišením 1080 pixelů a s objektivem s ekvivalentní ohniskovou vzdáleností \(50 mm\), by člověk jdoucí kolmo ke směru pohledu kamery a vzdálený od ní 10 metrů urazil za třicetinu sekundy vzdálenost ekvivalentní 2,3 pixelů.
+Je proto zřejmé, že rozdíly mezi dvěma po sobě jdoucími snímky proto budou minimální a bude v sekvenci tak bude obsaženo velké množství redundantních informací.
+Z tohoto důvou byl u trénovaných sítí měněn i parametr \texttt{stride}, který udává krok mezi snímky v sekvenci.
+Je-li hodnota tohoto parametru rovna jedné, nebudou mezi snímky v sekvenci žádné mezery a budou brány tak, jak se ve vstupním videu nacházejí.
+V případě, že má tento parametr hodnotu dva, tak již bude jeden snímek přeskočen a v sekvenci se tak bude nacházet každý druhý snímek ze vstupního videa.
 
 
 
