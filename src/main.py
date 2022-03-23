@@ -15,7 +15,6 @@ def initialize(dataset_name, model_path):
         dataset_path = '../datasets/VisDrone2020-CC'
         input_size = (1920, 1080)
 
-    # model = MyModelAlternative(model_path, input_size=input_size)
     model = MyModel(model_path, input_size=input_size)
 
     if dataset_name == 'FDST':
@@ -62,17 +61,16 @@ def initialize(dataset_name, model_path):
 # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # model = model.eval().to(device)
 
-dataset_name = 'FDST'
-# model_path = './trained_models/len5_stride3.tar'
-model_path = '../save_dir/3_3/15_ckpt.tar'
+dataset_name = 'PETS'
+model_path = '../save_dir/3_3/40_ckpt.tar'
 model, dataloader, dataset, device = initialize(dataset_name, model_path)
 
-evaluate_dataset(model, dataloader, device, 'old_len3_stride_3.csv')
+# evaluate_dataset(model, dataloader, device, 'len5_stride5_pets.csv')
 
 # plot_timeseries(model, dataset, device, 0, 100)
 # eval_video(model, '../datasets/VSB/20211005_120808.MOV', device, stride=3, sequence_len=5)
 # range_real_time(model, dataset, device, 0, 700)
-# animate_range(model, dataset, device)
+animate_range(model, dataset, device, 0, 100)
 # animate_video(model, device, '../datasets/VSB/20211005_120808.MOV', './save_dir/entry.mp4')
 
 

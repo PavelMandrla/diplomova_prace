@@ -28,18 +28,21 @@ def colorize_heat_map(mu):
     vis_img = mu[0, 0].cpu().numpy()
     vis_img = (vis_img - vis_img.min()) / (vis_img.max() - vis_img.min() + 1e-5)
     vis_img = (vis_img * 255).astype(np.uint8)
-    vis_img = cv2.applyColorMap(vis_img, cv2.COLORMAP_JET)
-    vis_img = cv2.cvtColor(vis_img, cv2.COLOR_BGR2RGB)[:, :, ::-1].copy()
+    vis_img = cv2.applyColorMap(vis_img, cv2.COLORMAP_PLASMA)
+    # vis_img = cv2.cvtColor(vis_img, cv2.COLOR_BGR2RGB)[:, :, ::-1].copy()
     return vis_img
 
 
-def animate_range(model, dataset, device):
+def animate_range(model, dataset, device, range_from, range_to):
+    plt.yticks(color='w')
+    plt.xticks(color='w')
+
     fig, axs = plt.subplots(1, 2)
     times = []
 
     def animate(i):
         print(i)
-        data = dataset[i]
+        data = dataset[range_from + i]
         image = data[0].unsqueeze(dim=0)
 
         start = timer()
@@ -51,14 +54,20 @@ def animate_range(model, dataset, device):
 
         image.cpu()
         vis_img = colorize_heat_map(mu)
+        vis_img = cv2.cvtColor(vis_img, cv2.COLOR_BGR2RGB)
 
-        axs[0].set_title('%.2f' % (torch.sum(mu).item()), fontsize = 14)
-        im1 = axs[0].imshow(vis_img)
-        axs[1].set_title('{}'.format(data[1].shape[0]), fontsize=14)
-        im2 = axs[1].imshow(dataset.get_unnormed_item(i))
+        axs[0].set_title('{}'.format(data[1].shape[0]), fontsize=14)
+        axs[0].tick_params(tick1On=False, labelcolor='w')
+        im1 = axs[0].imshow(dataset.get_unnormed_item(range_from + i))
+
+        axs[1].set_title('%.2f' % (torch.sum(mu).item()), fontsize = 14)
+        axs[1].tick_params(tick1On=False, labelcolor='w')
+        im2 = axs[1].imshow(vis_img)
+
+
         return im1, im2
 
-    ani = FuncAnimation(fig, animate, interval=40, blit=True, repeat=True, frames=100)
+    ani = FuncAnimation(fig, animate, interval=40, blit=True, repeat=True, frames=range_to - range_from)
     ani.save("TLI.gif", dpi=300, writer=PillowWriter(fps=25))
     print(sum(times) / len(times))
 

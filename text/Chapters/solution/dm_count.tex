@@ -104,13 +104,6 @@ Při jeho použití síť z počátku rychle konverguje do lokálního optima, a
 Jelikož autoři omezili množství iterací Sinkhornova algoritmu, vrací tento algoritmus pouze přibližná řešení \(\alpha^*\) a \(\beta^*\), což způsobuje, že predikovaná hustotní mapa bude  podobná základní pravdě, ale nebude identická.
 Toto podle autorů ve výsledné hustotní mapě způsobuje problémy, které nastávají hlavně v těch částech scény, kde je hustota lidí nízká a lidé jsou separováni.
 
-\begin{figure}[h!]
-	\centering
-	\input{Chapters/solution/training_loss.tex}
-	\caption{Graf zobrazuje pozorovanou konvergenci navržené sítě do lokálního optima při použití Sinkhornova algoritmu.}
-	\label{fig:RNN_architecture}
-\end{figure}
-
 Pro zpřesnění predikcí neuronové sítě v těchto problematických případech zavedli autoři do výsledné účelové funkce třetí část a to tzv. "Total Variation Loss".
 Celková variační vzdálenost může být stejně jako cena optimálního přesunu použita pro porovnání dvou pravděpodobnostních měr \(\mu\) a \(\nu\) na stejném měřitelném prostoru \(\mathcal{A}, \mathcal{F}\) \cite{Total_variation}.
 Vzdálenost těchto dvou pravděpodobnostních měr je definovaná následujícím vzorcem. (V literatuře se vyskytuje i verze, kdy je tato vzdálenost definovaná, jako dvojnásobek uvedeného vzorce, čímž se dá zbavit \(\frac{1}{2}\).)

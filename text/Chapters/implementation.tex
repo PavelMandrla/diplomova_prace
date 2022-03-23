@@ -128,19 +128,6 @@ V případě, že nerekurentní složka v síti není potřeba, může být na v
 Při dopředném šíření signálu pracuje na etapy, kdy každá etapa začínám aplikováním odpovídající nerekurentní sítě ze seznamu na vstupní data a následně předání sekvence zpracovaných dat na vstup ConvLSTM vrstvy.
 Sekvence výstupů ConvLSTM vrstvy je následně dána na vstup následující etapy.
 
-\begin{lstlisting}[language=Python, caption={Kód popisující dopředné šíření signálu během jedné etapy}]    
-    def forward_by_stage(self, inputs, subnet, rnn):
-        seq_number, batch_size, input_channel, height, width = inputs.size()
-        inputs = torch.reshape(inputs, (-1, input_channel, height, width))
-        # aplikování nerekurentní konvoluční sítě
-        inputs = subnet(inputs)
-        inputs = torch.reshape(inputs, (seq_number, batch_size, inputs.size(1),
-                                        inputs.size(2), inputs.size(3)))
-        # aplikování rekurentní ConvLSTM vrstvy
-        outputs_stage, state_stage = rnn(inputs, None)
-        return outputs_stage, state_stage
-\end{lstlisting}
-
 V navržené síti byly použity dvě ConvLSTM vrstvy, s tím, že před aplikováním každé z nich byla na vstup aplikována konvoluce o velikosti 3x3 s Leaky ReLU (Leaky Rectified Linear Unit) \cite{LeakyReLU} aktivační funkcí.
 První konvoluční vrstva sníží dimenzi výstupu ze sítě ResNet a z vektorů o 512 prvcích uložených v jednotlivých pixelech vytvoří vektory o délce 64. 
 S takto velkými tenzory pracují i ConvLSTM vrstvy.
@@ -155,5 +142,13 @@ O trénování modelu se stará třída Trainer, jejíž implementace je založe
 Ta na základě vstupních parametrů instancuje třídu trénovacího datasetu a trénovanou neuronovou síť.
 Síť je trénovaná po epochách, kde celkový počet epoch je stanovený parametrem, který zadá uživatel.
 V každé epoše se postupně projdou všechny sekvence snímků obsažené v trénovací množině, pro každou sekvenci se vypočítá chyba, která je následně zpětně šířená sítí a základě které následně dochází k změně vah v síti.
+Uživatel má možnost před spuštěním trénování nastavit parametry udávající váhu vlivu účelových funkcí OT Loss a TV Loss, celkový počet epoch, po které se bude estimátor trénovat, rychlost učení (learning rate), či délku sekvencí získaných z trénovací množiny, pomocí kterých se bude neuronová síť učit, a krok mezi jednotlivými snímky v této sekvenci.
+
+\begin{figure}[h!]
+	\centering
+	\input{Chapters/solution/training_loss.tex}
+	\caption{Graf zobrazuje pozorovanou míru chyby při trénování navržené sítě.}
+	\label{fig:loss_change}
+\end{figure}
 
 \endinput
